@@ -32,6 +32,46 @@ Interactive adding new programs and editing
 - Editing parameters of an added program
 - Addition of any proprietary program
 
+## Installation
+
+Prerequisites
+- An Unix based system: Linux, macOS.
+- [Java SE Runtime Environment 6 or later](https://www.oracle.com/java/technologies/javase-downloads.html)
+- [Seismic Unix](https://github.com/JohnWStockwellJr/SeisUnix/wiki#installation-notes)
+
+### Option 1 - Install binaries only
+
+Refer to the to the [distribution repository](https://github.com/botoseis/botoseis-bin).
+
+### Option 2 - Download and compile source code
+
+Additional prequisites:
+- [Java SE Development Kit 6 or later](https://www.oracle.com/java/technologies/javase-downloads.html)
+- [NetBeans](https://netbeans.apache.org/download/index.html)
+
+Clone this repository as `BotoseisProject`
+```
+git clone https://github.com/botoseis/BotoSeis.git 'BotoseisProject'
+```
+
+Set up persistent enviroment variables. This is mandatory since the program uses the `BOTOSEIS_ROOT` enviroment variable.
+```
+echo "export BOTOSEIS_ROOT='path/to/BotoseisProject/Botoseis/scripts'" >>~/.bashrc
+echo 'export PATH="${PATH}:${BOTOSEIS_ROOT}/bin"' >>~/.bashrc
+```
+
+Update your shell session
+```
+source ~/.bashrc
+```
+
+Build: open the Botoseis project with NetBeans > Clean and Build
+
+You can also run the software inside NetBeans or by using the following command, which was set in your `PATH`
+```
+runboto.sh
+```
+
 ## License
 
 This softare is under the [GNU General Public License v3.0](LICENSE).
