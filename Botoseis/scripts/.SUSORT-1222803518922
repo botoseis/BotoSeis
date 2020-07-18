@@ -1,0 +1,6 @@
+&required
+input=/home/german/Mywork/Aulas/blog-botoseis/Tacutu-50-90/processado/050-090_shots.su
+/
+&optional
+keys=cdp offset
+/

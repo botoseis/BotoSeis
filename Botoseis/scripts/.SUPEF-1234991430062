@@ -1,0 +1,15 @@
+&required
+dt=
+/
+&optional
+cdp=
+minlag=0.012
+maxlag=
+pnoise=
+mincorr=
+maxcor=
+showwiener=No
+mix=
+outpar=
+method=linear
+/

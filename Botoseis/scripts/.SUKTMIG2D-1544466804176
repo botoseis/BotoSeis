@@ -1,0 +1,14 @@
+&Required
+vfile=/home/cadu/Seismic/proceSismico/marmousi/post_stack_migration/_smooth.bin
+dx=12.5
+/
+&Optional
+fcdpdata=1
+firstcdp=1
+lastcdp=574
+dcdp=1
+angmax=80
+hoffset=0
+nfc=
+fwidth=
+/

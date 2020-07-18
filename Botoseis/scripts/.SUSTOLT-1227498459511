@@ -1,0 +1,17 @@
+&Required
+cdpmin=1
+cdpmax=801
+dxcdp=10
+/
+&Optional
+noffmix=
+tmig=0.18,0.28,0.35,0.52,0.68,0.82
+vmig=3000.0,3186.12,3337.54,3678.23,4082.02,4107.26
+smig=
+vscale=
+fmax=
+lstaper=
+lbtaper=
+verbose=No
+tmpdir=
+/
