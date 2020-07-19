@@ -34,10 +34,15 @@ Interactive adding new programs and editing
 
 ## Installation
 
-Prerequisites
+### Prerequisites
 - An Unix based system: Linux, macOS.
 - [Java SE Runtime Environment 6 or later](https://www.oracle.com/java/technologies/javase-downloads.html)
 - [Seismic Unix](https://github.com/JohnWStockwellJr/SeisUnix/wiki#installation-notes)
+
+If you use Ubuntu 20.04 or similar, you can just download and run our [Seismic Unix installation script](https://gist.github.com/botoseis/7230737e34fb5306039ad13dd833bf3f):
+```
+bash -c "$(wget -qO- https://git.io/JJc4m)"
+```
 
 ### Option 1 - Install binaries only
 
