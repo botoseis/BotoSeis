@@ -41,12 +41,15 @@ Interactive adding new programs and editing
 
 If you use Ubuntu 20.04 or similar, you can just download and run our [Seismic Unix installation script](https://gist.github.com/botoseis/7230737e34fb5306039ad13dd833bf3f):
 ```
-bash -c "$(wget -qO- https://git.io/JJc4m)"
+bash -c "$(wget -qO- https://git.io/JJcRJ)"
 ```
 
 ### Option 1 - Install binaries only
 
-Refer to the to the [distribution repository](https://github.com/botoseis/botoseis-bin).
+Download and run the [BotoSeis installation script](https://gist.github.com/botoseis/fe86c3c13f65e3d43b11e4fa9560ce30). It clones the [distribution repository](https://github.com/botoseis/botoseis-bin).
+```
+bash -c "$(wget -qO- https://git.io/JJcRI)"
+```
 
 ### Option 2 - Download and compile source code
 
