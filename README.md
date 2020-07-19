@@ -39,22 +39,34 @@ Interactive adding new programs and editing
 - [Java SE Runtime Environment 6 or later](https://www.oracle.com/java/technologies/javase-downloads.html)
 - [Seismic Unix](https://github.com/JohnWStockwellJr/SeisUnix/wiki#installation-notes)
 
-If you use Ubuntu 20.04 or similar, you can just download and run our [Seismic Unix installation script](https://gist.github.com/botoseis/7230737e34fb5306039ad13dd833bf3f):
+### Installing prerequisites
+
+#### Java
+
+Run this command on the terminal to install Java using APT
+```
+sudo apt install -y default-jdk
+```
+
+#### Seismic Unix
+
+Run this command
 ```
 bash -c "$(wget -qO- https://git.io/JJcRJ)"
 ```
+What this does is download and run our [Seismic Unix installation script](https://gist.github.com/botoseis/7230737e34fb5306039ad13dd833bf3f)
 
-### Option 1 - Install binaries only
+### Option 1 - Install binaries only (recommended for most users)
 
-Download and run the [BotoSeis installation script](https://gist.github.com/botoseis/fe86c3c13f65e3d43b11e4fa9560ce30). It clones the [distribution repository](https://github.com/botoseis/botoseis-bin).
+Run this command
 ```
 bash -c "$(wget -qO- https://git.io/JJcRI)"
 ```
+What this does is download and run our [BotoSeis installation script](https://gist.github.com/botoseis/fe86c3c13f65e3d43b11e4fa9560ce30), which clones the [distribution repository](https://github.com/botoseis/botoseis-bin).
 
 ### Option 2 - Download and compile source code
 
 Additional prequisites:
-- [Java SE Development Kit 6 or later](https://www.oracle.com/java/technologies/javase-downloads.html)
 - [NetBeans](https://netbeans.apache.org/download/index.html)
 
 Clone this repository as `BotoseisProject`
