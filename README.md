@@ -60,7 +60,7 @@ What this does is download and run our [Seismic Unix installation script](https:
 
 Run this command
 ```
-bash -c "$(wget -qO- https://git.io/JJcRI)"
+bash -c "$(wget -qO- https://git.io/JJlgk)"
 ```
 What this does is download and run our [BotoSeis installation script](https://gist.github.com/botoseis/fe86c3c13f65e3d43b11e4fa9560ce30), which clones the [distribution repository](https://github.com/botoseis/botoseis-bin).
 
