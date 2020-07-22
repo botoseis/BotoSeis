@@ -2,7 +2,7 @@
 
 BotoSeis is an open-source seismic data processing software developed to run in a simple and flexible interactive environment the Seismic Unix programs.
 
-BotoSeis is an interactive user-friendly interface to create and manage projects, lines and flowcharts for seismic data processing. It is also possible to add new SU programs or to edit any already included programs in an interactive mode, without knowledge of  any programming language. BotoSeis project, created by Professor German Garabito, was started at UFPA - Universidade Federal do Pará, Belém-Brasil, and is currently updated at UFRN - Universidade Federal do Rio Grande do Norte, Natal-Brasil. The main contributors to this project are Williams Lima and Gabriel Almeida.
+BotoSeis is an interactive user-friendly interface to create and manage projects, lines and flowcharts for seismic data processing. It is also possible to add new SU programs or to edit any already included programs in an interactive mode, without knowledge of  any programming language. BotoSeis project, created by German Garabito, was started at UFPA-Belém and is currently updated at UFRN-Natal. The main contributors to this project are Williams Lima and Gabriel Almeida.
 
 The BotoSeis project also aims to develop interactive tools for data visualization, velocity analysis, f-k filtering, muting and others. Currently, two programs have already been developed, the botoView for data visualization and botoVelan for velocity analysis.
 Create and manage projects, lines, and flows:
@@ -52,7 +52,7 @@ sudo apt install -y default-jdk
 
 Run this command
 ```
-bash -c "$(wget -qO- https://git.io/JJcRJ)"
+bash -c "$(wget -qO- https://git.io/JJlw8)"
 ```
 What this does is download and run our [Seismic Unix installation script](https://gist.github.com/botoseis/7230737e34fb5306039ad13dd833bf3f)
 
@@ -69,25 +69,34 @@ What this does is download and run our [BotoSeis installation script](https://gi
 Additional prequisites:
 - [NetBeans](https://netbeans.apache.org/download/index.html)
 
-Clone this repository as `BotoseisProject`
+#### 1. Clone this repository as `BotoseisProject`
 ```
-git clone https://github.com/botoseis/BotoSeis.git 'BotoseisProject'
+git clone https://github.com/botoseis/BotoSeis.git BotoseisProject
 ```
 
-Set up persistent enviroment variables. This is mandatory since the program uses the `BOTOSEIS_ROOT` enviroment variable.
+#### 2. Set up persistent enviroment variables. 
+This is mandatory since the program requires the `BOTOSEIS_ROOT` enviroment variable to run properly.
+
+You can use these commands to add lines to the end of the `~/.bashrc` file, if you use bash. Remember to substitute `path/to/BotoseisProject` with the location where you cloned this repository.
 ```
+# Example: setting persistent enviroment variables using ~/.bashrc file
+
 echo "export BOTOSEIS_ROOT='path/to/BotoseisProject/Botoseis/scripts'" >>~/.bashrc
 echo 'export PATH="${PATH}:${BOTOSEIS_ROOT}/bin"' >>~/.bashrc
 ```
 
-Update your shell session
+#### 3. Update your shell session
 ```
 source ~/.bashrc
 ```
 
-Build: open the Botoseis project with NetBeans > Clean and Build
+#### 4. Build the project
 
-You can also run the software inside NetBeans or by using the following command, which was set in your `PATH`
+Open the Botoseis project with NetBeans > Clean and Build
+
+### 5. How to run?
+
+After building it, you can run the project inside NetBeans using the "Run Project" button, or you can run it in the terminal by using the following command, which should already be available from your `PATH` if you completed steps 2 and 3 correctly.
 ```
 runboto.sh
 ```
