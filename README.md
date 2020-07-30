@@ -100,6 +100,7 @@ After building it, you can run the project inside NetBeans using the "Run Projec
 ```
 runboto.sh
 ```
+You can find a BotoSeis user guide with seismic data processing examples at: https://germangarabito.wordpress.com/
 
 ## License
 
