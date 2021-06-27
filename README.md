@@ -52,7 +52,7 @@ sudo apt install -y default-jdk
 
 Run this command
 ```
-bash -c "$(wget -qO- https://git.io/JT2Ou)"
+bash -c "$(wget -qO- https://git.io/JcTjJ)"
 ```
 What this does is download and run our [Seismic Unix installation script](https://gist.github.com/botoseis/4ca681cb9ef706c1b8410153c6199cf2)
 
