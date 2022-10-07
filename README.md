@@ -50,11 +50,11 @@ sudo apt install -y default-jdk
 
 #### Seismic Unix
 
-Run this command
+Download and run our [Seismic Unix installation script](https://gist.github.com/botoseis/4ca681cb9ef706c1b8410153c6199cf2) for Ubuntu 22. Not tested on other Linux distros.
 ```
 bash -c "$(wget -qO- https://gist.githubusercontent.com/botoseis/4ca681cb9ef706c1b8410153c6199cf2/raw/b16ad754839d1ca3657d8e8396db14f5ba791e6b/install_seismic_unix.sh)"
 ```
-What this does is download and run our [Seismic Unix installation script](https://gist.github.com/botoseis/4ca681cb9ef706c1b8410153c6199cf2). It tries to automate the steps shown on the [official installation guide](https://wiki.seismic-unix.org/sudoc:su_installation).
+This script automates the steps shown on the [official installation guide](https://wiki.seismic-unix.org/sudoc:su_installation).
 
 ### Option 1 - Install binaries only (recommended for most users)
 
