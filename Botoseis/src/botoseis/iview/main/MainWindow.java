@@ -29,6 +29,7 @@ import javax.swing.JOptionPane;
 import usrdata.SUHeader;
 import usrdata.SUSection;
 import usrdata.SUTrace;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -251,40 +252,31 @@ public class MainWindow extends javax.swing.JFrame {
         gfxPanelCDP.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent evt) {
-                System.err.println();
-                printt("mouseClicked");
                 SVPoint2D mouseLocation = gfxPanelCDP.getMouseLocation();
+                System.err.println();
+                printt("CALL mouseClicked");
                 printt("mouseLocation:");
                 printt("  fx: " + mouseLocation.fx);
                 printt("  fy: " + mouseLocation.fy);
                 printt("  ix: " + mouseLocation.ix);
                 printt("  iy: " + mouseLocation.iy);
-                float v = mouseLocation.fx;
-                float t = mouseLocation.fy;
-                int vx = mouseLocation.ix;
-                int vy = mouseLocation.iy;
                 
-                float EPSX = 60; // 10 pixels
-                float EPSY = 200;  // 10 pixels
-                
-                gfx.SVPoint2D pickP = null;
-                int removedIndex = -1;
                 switch(evt.getButton()) {
                     case java.awt.event.MouseEvent.BUTTON1:
-                        addVelocityPick(v, t, vx, vy);
-//                        updateVelocityModel();
-//                        updateIntelvalVelocity();
-//                        m_isModified = true;
+                        addPick(mouseLocation);
+                        break;
+                    case java.awt.event.MouseEvent.BUTTON2:
+                        removePick(mouseLocation);
                         break;
                 }
             }
         });
         
-        picksCurve.setLineStyle(SVXYPlot.INVISIBLE);
-        picksCurve.setPointsVisible(true);
-        picksCurve.setDrawColor(java.awt.Color.red);
-        picksCurve.setDrawSize(3);
-        gfxPanelCDP.addXYPlot(picksCurve);
+        picksGraphicalPlot.setLineStyle(SVXYPlot.SOLID);
+        picksGraphicalPlot.setPointsVisible(true);
+        picksGraphicalPlot.setDrawColor(java.awt.Color.red);
+        picksGraphicalPlot.setDrawSize(3);
+        gfxPanelCDP.addXYPlot(picksGraphicalPlot);
     }
 
     /** This method is called from within the constructor to
@@ -709,7 +701,7 @@ private void btnClipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
         printt("btnTest");
         
 //        picksCurve.update(new float[] {1.0f, 1.5f}, new float[] {1.0f, 1.5f});
-        picksCurve.update(new float[] {1.0f}, new float[] {1.0f});
+        picksGraphicalPlot.update(new float[] {1.0f}, new float[] {1.0f});
         panelCDP.repaint();
     }//GEN-LAST:event_btnTestActionPerformed
 
@@ -1153,7 +1145,8 @@ private void btnClipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
     int m_currMapType;
     Preferences preferences;
     Vector<SVPoint2D> m_currentCDPVelocityPicks = new Vector<>();
-    SVXYPlot picksCurve = new SVXYPlot();
+    SVXYPlot picksGraphicalPlot = new SVXYPlot();
+    ArrayList<SVPoint2D> picksListCurrent = new ArrayList<>();
 
     /**
      * @return the mHeader
@@ -1197,6 +1190,37 @@ private void btnClipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
 
         m_currentCDPVelocityPicks.add(p);
         updateVelocityPicksCurve(0, 0);
+    }
+    
+    private void updatePicksGraphicalPlotFromList() {
+        float[] picksX = new float[picksListCurrent.size()];
+        float[] picksY = new float[picksListCurrent.size()];
+        for (int i = 0; i < picksListCurrent.size(); i++) {
+            picksX[i] = picksListCurrent.get(i).fx;
+            picksY[i] = picksListCurrent.get(i).fy;
+        }
+        picksGraphicalPlot.update(picksX, picksY);
+        gfxPanelCDP.repaint();
+    }
+    
+    private void addPick(SVPoint2D mouseLocation) {
+        picksListCurrent.add(mouseLocation);
+        picksListCurrent.sort(SVPoint2DComparator.getInstance());        
+        updatePicksGraphicalPlotFromList();
+    }
+    
+    private void removePick(SVPoint2D mouseLocation) {
+        final float EPS_X = 0.037f;
+        final float EPS_Y = 0.037f;
+        
+        picksListCurrent.stream()
+            .filter(pick -> (Math.abs(pick.fx - mouseLocation.fx) <= EPS_X) && (Math.abs(pick.fy - mouseLocation.fy) <= EPS_Y))
+            .findFirst()
+            .ifPresent(pick -> {
+                printt(String.format("pick.fx: %f, mouseLocation.fx: %f", pick.fx, mouseLocation.fx));
+                picksListCurrent.remove(pick);
+                updatePicksGraphicalPlotFromList();
+            });
     }
     
     private void updateVelocityPicksCurve(float v, float t) {
@@ -1253,14 +1277,32 @@ private void btnClipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
 //            x2[1] = (m_curCDP);
 //            y2[0] = ymin2;
 //            y2[1] = ymax2;
+            printt("pa[0].fx: " + String.valueOf(pa[0].fx));
+            printt("pa[0].fy: " + String.valueOf(pa[0].fx));
             printt("x: " + Arrays.toString(x));
             printt("y: " + Arrays.toString(y));
-            picksCurve.update(x, y);
+            picksGraphicalPlot.update(x, y);
             panelCDP.repaint();
         }
     }
 
     
-    
+    private static class SVPoint2DComparator implements java.util.Comparator<gfx.SVPoint2D> {
+        private static SVPoint2DComparator instance;
+        
+        private SVPoint2DComparator() {}
+        
+        public static SVPoint2DComparator getInstance() {
+            if (instance == null) {
+                instance = new SVPoint2DComparator();
+            }
+            return instance;
+        }
+
+        @Override
+        public int compare(SVPoint2D o1, SVPoint2D o2) {
+            return Float.compare(o1.fx, o2.fx);
+        }
+    }
     
 }
