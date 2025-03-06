@@ -22,6 +22,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Vector;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -246,8 +247,44 @@ public class MainWindow extends javax.swing.JFrame {
         dlgHeader = new DialogHeaderTrace(this, false);
         dlgGain = new DialogGain(this, true);
 
-
-
+        
+        gfxPanelCDP.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                System.err.println();
+                printt("mouseClicked");
+                SVPoint2D mouseLocation = gfxPanelCDP.getMouseLocation();
+                printt("mouseLocation:");
+                printt("  fx: " + mouseLocation.fx);
+                printt("  fy: " + mouseLocation.fy);
+                printt("  ix: " + mouseLocation.ix);
+                printt("  iy: " + mouseLocation.iy);
+                float v = mouseLocation.fx;
+                float t = mouseLocation.fy;
+                int vx = mouseLocation.ix;
+                int vy = mouseLocation.iy;
+                
+                float EPSX = 60; // 10 pixels
+                float EPSY = 200;  // 10 pixels
+                
+                gfx.SVPoint2D pickP = null;
+                int removedIndex = -1;
+                switch(evt.getButton()) {
+                    case java.awt.event.MouseEvent.BUTTON1:
+                        addVelocityPick(v, t, vx, vy);
+//                        updateVelocityModel();
+//                        updateIntelvalVelocity();
+//                        m_isModified = true;
+                        break;
+                }
+            }
+        });
+        
+        picksCurve.setLineStyle(SVXYPlot.INVISIBLE);
+        picksCurve.setPointsVisible(true);
+        picksCurve.setDrawColor(java.awt.Color.red);
+        picksCurve.setDrawSize(3);
+        gfxPanelCDP.addXYPlot(picksCurve);
     }
 
     /** This method is called from within the constructor to
@@ -275,6 +312,7 @@ public class MainWindow extends javax.swing.JFrame {
         btnHeader = new javax.swing.JToggleButton();
         btnGain = new javax.swing.JButton();
         btnClip = new javax.swing.JButton();
+        btnTest = new javax.swing.JButton();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         menuExit = new javax.swing.JMenuItem();
@@ -307,8 +345,9 @@ public class MainWindow extends javax.swing.JFrame {
         panelA.setBorder(javax.swing.BorderFactory.createEtchedBorder());
         panelA.setLayout(new javax.swing.BoxLayout(panelA, javax.swing.BoxLayout.LINE_AXIS));
 
+        colorbarPanel.setBackground(java.awt.SystemColor.control);
         colorbarPanel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
-        colorbarPanel.setLayout(new java.awt.GridLayout());
+        colorbarPanel.setLayout(new java.awt.GridLayout(1, 0));
 
         panelPkey.setBorder(javax.swing.BorderFactory.createEtchedBorder());
 
@@ -421,6 +460,17 @@ public class MainWindow extends javax.swing.JFrame {
             }
         });
         jToolBar1.add(btnClip);
+
+        btnTest.setText("TESTAR");
+        btnTest.setFocusable(false);
+        btnTest.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        btnTest.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        btnTest.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnTestActionPerformed(evt);
+            }
+        });
+        jToolBar1.add(btnTest);
 
         jMenu1.setText("File");
 
@@ -561,6 +611,7 @@ private void btnZoomItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:
 }//GEN-LAST:event_btnZoomItemStateChanged
 
 private void btnNextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNextActionPerformed
+    printt("btnNextActionPerformed");
 
 
         if (mapSection.lastIndexOf(section.getTraces()) < 0 || (mapSection.lastIndexOf(section.getTraces()) + 1) == mapSection.size()) {
@@ -580,7 +631,8 @@ private void btnNextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
 }//GEN-LAST:event_btnNextActionPerformed
 
 private void btnPreviousActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPreviousActionPerformed
-        // TODO add your handling code here:
+    printt("btnPreviousActionPerformed");
+    // TODO add your handling code here:
 
         if (mapSection.indexOf(section.getTraces()) > 0) {
             section.setTraces(mapSection.get(mapSection.indexOf(section.getTraces()) - 1));
@@ -651,6 +703,15 @@ private void btnClipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
             panelCDP.repaint();
         }
 }//GEN-LAST:event_btnClipActionPerformed
+
+    private void btnTestActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTestActionPerformed
+        // TODO add your handling code here:
+        printt("btnTest");
+        
+//        picksCurve.update(new float[] {1.0f, 1.5f}, new float[] {1.0f, 1.5f});
+        picksCurve.update(new float[] {1.0f}, new float[] {1.0f});
+        panelCDP.repaint();
+    }//GEN-LAST:event_btnTestActionPerformed
 
     private void onGraphicsPanelMouseReleased(MouseEvent e) {
         float lm[] = getGfxPanelCDP().getAxisLimits();
@@ -1019,6 +1080,7 @@ private void btnClipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
     private javax.swing.JToggleButton btnHeader;
     private javax.swing.JButton btnNext;
     private javax.swing.JButton btnPrevious;
+    private javax.swing.JButton btnTest;
     private javax.swing.JToggleButton btnZoom;
     private javax.swing.JPanel colorbarPanel;
     private javax.swing.JMenu jMenu1;
@@ -1090,6 +1152,8 @@ private void btnClipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
     int m_currMapColor;
     int m_currMapType;
     Preferences preferences;
+    Vector<SVPoint2D> m_currentCDPVelocityPicks = new Vector<>();
+    SVXYPlot picksCurve = new SVXYPlot();
 
     /**
      * @return the mHeader
@@ -1118,4 +1182,85 @@ private void btnClipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
     public void setGfxPanelCDP(gfx.SVGraphicsPanel gfxPanelCDP) {
         this.gfxPanelCDP = gfxPanelCDP;
     }
+    
+    public static void printt(Object x) {
+        System.err.println(x);
+    }
+    
+    private void addVelocityPick(float v, float t, int vx, int vy) {
+        gfx.SVPoint2D p = new gfx.SVPoint2D();
+
+        p.fx = v;
+        p.fy = t;
+        p.ix = vx;
+        p.iy = vy;
+
+        m_currentCDPVelocityPicks.add(p);
+        updateVelocityPicksCurve(0, 0);
+    }
+    
+    private void updateVelocityPicksCurve(float v, float t) {
+        if (m_currentCDPVelocityPicks != null && !m_currentCDPVelocityPicks.isEmpty()) {
+            
+            float[] lm = gfxPanelCDP.getAxisLimits();
+//            float[] lm2 = dvwnd.gfxPanelCDP.getAxisLimits();
+            
+            float ymin = lm[0];
+            float ymax = lm[1];
+//            float ymin2 = lm2[0];
+//            float ymax2 = lm2[1];
+//            float xmin2 = lm2[2];
+//            float xmax2 = lm2[3];
+            
+            Vector<SVPoint2D> picksList = new Vector<>();
+            SVPoint2D npick = null;
+            
+            for (int i = 0; i < m_currentCDPVelocityPicks.size(); i++) {
+                npick = new gfx.SVPoint2D();
+                npick.fx = m_currentCDPVelocityPicks.get(i).fx;
+                npick.fy = m_currentCDPVelocityPicks.get(i).fy;
+                picksList.add(npick);
+            }
+            
+            // if (m_cursorOverSemblancemap || m_cursorOverCVS) {
+            npick = new gfx.SVPoint2D();
+            npick.fx = v;
+            npick.fy = t;
+            picksList.add(npick);
+            
+            // Sort velocity picks, increasing time
+            gfx.SVPoint2D[] pa = new gfx.SVPoint2D[picksList.size()];
+            picksList.toArray(pa);
+            
+            int np = picksList.size();
+            float[] x = new float[np + 2];
+            float[] y = new float[np + 2];
+            float[] x2 = new float[2];
+            float[] y2 = new float[2];
+
+            x[0] = pa[0].fx;
+            y[0] = ymin;
+
+            for (int i = 0; i < np; i++) {
+                x[i + 1] = pa[i].fx;
+                y[i + 1] = pa[i].fy;
+            }
+
+            x[np + 1] = x[np];
+            y[np + 1] = ymax;
+
+//            x2[0] = (m_curCDP);
+//            x2[1] = (m_curCDP);
+//            y2[0] = ymin2;
+//            y2[1] = ymax2;
+            printt("x: " + Arrays.toString(x));
+            printt("y: " + Arrays.toString(y));
+            picksCurve.update(x, y);
+            panelCDP.repaint();
+        }
+    }
+
+    
+    
+    
 }
