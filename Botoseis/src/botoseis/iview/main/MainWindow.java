@@ -125,6 +125,7 @@ public class MainWindow extends javax.swing.JFrame {
 
         gfxPanelCDP.addMouseListener(new MouseListener() {
 
+            @Override
             public void mouseClicked(MouseEvent e) {
                 if (btnHeader.isSelected()) {
                     //throw new UnsupportedOperationException("Not supported yet.");
@@ -198,6 +199,7 @@ public class MainWindow extends javax.swing.JFrame {
             public void mouseDragged(MouseEvent e) {
             }
 
+            @Override
             public void mouseMoved(MouseEvent e) {
                 //throw new UnsupportedOperationException("Not supported yet.");
                 SVActor act = null;
@@ -260,6 +262,34 @@ public class MainWindow extends javax.swing.JFrame {
                 printt("  fy: " + mouseLocation.fy);
                 printt("  ix: " + mouseLocation.ix);
                 printt("  iy: " + mouseLocation.iy);
+                
+                float XlenghtHI = section.getF2();  // = H(1).sx / scalco
+                
+                float distanciax = section.getD2();
+                float delrt = section.getF1();  // primeiro tempo do matlab = 0
+                
+                float dt = section.getD1(); // = dt do matlab = 0.004
+                
+                int XMatr = Math.round((mouseLocation.fx - XlenghtHI) / distanciax) + 1;
+                int YMatr = Math.round((mouseLocation.fy - delrt) / dt) + 1;
+                
+                int n_linhamaximo = section.getN1();
+                int n = YMatr - 1 + (XMatr - 1) * (n_linhamaximo);
+
+                int trace = n / section.getN1();
+                
+                printt("XlenghtHI: " + XlenghtHI);
+                printt("distanciax: " + distanciax);
+                printt("delrt: " + delrt);
+                printt("dt: " + dt);
+                printt("XMatr: " + XMatr);
+                printt("YMatr: " + YMatr);
+                printt("n_linhamaximo: " + n_linhamaximo);
+                printt("n: " + n);
+                printt("trace: " + trace);
+                
+                SUHeader h = section.getTraces().get(trace).getHeader();
+                printt(String.format("fldr: %d tracf: %d cdp: %d ep: %d offset: %d  time: %.2f", h.fldr, h.tracf, h.cdp, h.ep, h.offset, mouseLocation.fy));
                 
                 switch(evt.getButton()) {
                     case java.awt.event.MouseEvent.BUTTON1:
