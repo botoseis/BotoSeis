@@ -8,6 +8,7 @@ package botoseis.iview.main;
 import botoseis.iview.dialogs.DialogGain;
 import botoseis.iview.dialogs.DialogHeaderTrace;
 import botoseis.iview.dialogs.DialogParametersImage;
+import botoseis.iview.utils.PicksFileIO;
 import botoseis.mainGui.utils.Preferences;
 import gfx.SVActor;
 import gfx.AxisPanel;
@@ -278,14 +279,15 @@ public class MainWindow extends javax.swing.JFrame {
 
                 int trace = n / section.getN1();
                 
-                printt("XlenghtHI: " + XlenghtHI);
-                printt("distanciax: " + distanciax);
-                printt("delrt: " + delrt);
-                printt("dt: " + dt);
+                
+                printt("section.getF2() ≡ XlenghtHI:  " + XlenghtHI);
+                printt("section.getD2() ≡ distanciax: " + distanciax);
+                printt("section.getF1() ≡ delrt:      " + delrt);
+                printt("section.getD1() ≡ dt          " + dt);
                 printt("XMatr: " + XMatr);
                 printt("YMatr: " + YMatr);
-                printt("n_linhamaximo: " + n_linhamaximo);
-                printt("n: " + n);
+                printt("section.getN1() ≡ n_linhamaximo: " + n_linhamaximo);
+                printt("n:     " + n);
                 printt("trace: " + trace);
                 
                 SUHeader h = section.getTraces().get(trace).getHeader();
@@ -730,9 +732,12 @@ private void btnClipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
         // TODO add your handling code here:
         printt("btnTest");
         
+        PicksFileIO p = new PicksFileIO();
+        p.writePicksToFile("/home/cadu/Documents/output.csv", picksListCurrent, section);
+        
 //        picksCurve.update(new float[] {1.0f, 1.5f}, new float[] {1.0f, 1.5f});
-        picksGraphicalPlot.update(new float[] {1.0f}, new float[] {1.0f});
-        panelCDP.repaint();
+
+
     }//GEN-LAST:event_btnTestActionPerformed
 
     private void onGraphicsPanelMouseReleased(MouseEvent e) {
