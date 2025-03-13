@@ -24,6 +24,8 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 import java.util.Vector;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -34,11 +36,15 @@ import java.util.stream.Collectors;
 
 /**
  *
- * @author  williams
+ * @author williams
  */
 public class MainWindow extends javax.swing.JFrame {
 
-    /** Creates new form MainWindow */
+    /**
+     * Creates new form MainWindow
+     */
+    private boolean isPreviewPickEnabled = false;
+
     public MainWindow() {
         initComponents();
 
@@ -58,10 +64,9 @@ public class MainWindow extends javax.swing.JFrame {
         mHeader.setDrawSize(1);
         mHeader.setVisible(true);
         gfxPanelCDP.addXYPlot(mHeader);
-        
-        preferences = Preferences.getPreferences();
-        System.out.println("USING FORMAT: "+preferences.getFormat());
 
+        preferences = Preferences.getPreferences();
+        System.out.println("USING FORMAT: " + preferences.getFormat());
 
         m_currMapColor = 2;
 
@@ -167,20 +172,44 @@ public class MainWindow extends javax.swing.JFrame {
                     dlgHeader.setVisible(true);
                 }
 
-
             }
 
+            @Override
             public void mousePressed(MouseEvent e) {
 //                throw new UnsupportedOperationException("Not supported yet.");
                 if (btnZoom.isSelected()) {
                     p1Zoom = gfxPanelCDP.getMouseLocation();
                 }
+                // press and hold in pick
+                if (!isPreviewPickEnabled && e.getButton() == java.awt.event.MouseEvent.BUTTON1) {
+                    SVPoint2D mouseLocation = gfxPanelCDP.getMouseLocation();
+                    findPickNearMouseLocation(mouseLocation).ifPresentOrElse(
+                            pick -> {
+                                printt("Press and hold pick");
+                                printt(String.format("found pick at %.2f, %.2f", mouseLocation.fx, mouseLocation.fy));
+                                isPreviewPickEnabled = true;
+                            },
+                            () -> {
+                                printt("No pick found");
+                            });
+
+                }
             }
 
+            @Override
             public void mouseReleased(java.awt.event.MouseEvent e) {
+                printt("CALL mouseReleased");
+
                 if (btnZoom.isSelected()) {
                     p2Zoom = gfxPanelCDP.getMouseLocation();
                     onGraphicsPanelMouseReleased(e);
+                }
+
+                if (isPreviewPickEnabled) {
+                    printt("fix preview pick at mouse release location");
+                    // add the current temporary pick as an actual pick
+                    addActualPick(gfxPanelCDP.getMouseLocation());
+                    isPreviewPickEnabled = false;
                 }
             }
 
@@ -189,15 +218,29 @@ public class MainWindow extends javax.swing.JFrame {
                 getGfxPanelCDP().requestFocus();
             }
 
+            @Override
             public void mouseExited(MouseEvent e) {
 //                throw new UnsupportedOperationException("Not supported yet.");
             }
         });
 
-
         gfxPanelCDP.addMouseMotionListener(new MouseMotionListener() {
 
+            @Override
             public void mouseDragged(MouseEvent e) {
+                if (isPreviewPickEnabled) {
+                    SVPoint2D mouseLocation = getGfxPanelCDP().getMouseLocation();
+                    updateTemporaryPreviewPick(mouseLocation.fx, mouseLocation.fy);
+                }
+//                printt(String.format("%.2f, %.2f", mouseLocation.fx, mouseLocation.fy));
+
+//                findPickNearMouseLocation(mouseLocation).ifPresentOrElse(
+//                        pick -> {
+//                        
+//                        },
+//                        () -> {
+//               });
+//               
             }
 
             @Override
@@ -251,7 +294,6 @@ public class MainWindow extends javax.swing.JFrame {
         dlgHeader = new DialogHeaderTrace(this, false);
         dlgGain = new DialogGain(this, true);
 
-        
         gfxPanelCDP.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent evt) {
@@ -263,23 +305,22 @@ public class MainWindow extends javax.swing.JFrame {
                 printt("  fy: " + mouseLocation.fy);
                 printt("  ix: " + mouseLocation.ix);
                 printt("  iy: " + mouseLocation.iy);
-                
+
                 float XlenghtHI = section.getF2();  // = H(1).sx / scalco
-                
+
                 float distanciax = section.getD2();
                 float delrt = section.getF1();  // primeiro tempo do matlab = 0
-                
+
                 float dt = section.getD1(); // = dt do matlab = 0.004
-                
+
                 int XMatr = Math.round((mouseLocation.fx - XlenghtHI) / distanciax) + 1;
                 int YMatr = Math.round((mouseLocation.fy - delrt) / dt) + 1;
-                
+
                 int n_linhamaximo = section.getN1();
                 int n = YMatr - 1 + (XMatr - 1) * (n_linhamaximo);
 
                 int trace = n / section.getN1();
-                
-                
+
                 printt("section.getF2() ≡ XlenghtHI:  " + XlenghtHI);
                 printt("section.getD2() ≡ distanciax: " + distanciax);
                 printt("section.getF1() ≡ delrt:      " + delrt);
@@ -289,21 +330,21 @@ public class MainWindow extends javax.swing.JFrame {
                 printt("section.getN1() ≡ n_linhamaximo: " + n_linhamaximo);
                 printt("n:     " + n);
                 printt("trace: " + trace);
-                
+
                 SUHeader h = section.getTraces().get(trace).getHeader();
                 printt(String.format("fldr: %d tracf: %d cdp: %d ep: %d offset: %d  time: %.2f", h.fldr, h.tracf, h.cdp, h.ep, h.offset, mouseLocation.fy));
-                
-                switch(evt.getButton()) {
+
+                switch (evt.getButton()) {
                     case java.awt.event.MouseEvent.BUTTON1:
-                        addPick(mouseLocation);
+                        addActualPick(mouseLocation);
                         break;
                     case java.awt.event.MouseEvent.BUTTON2:
-                        removePick(mouseLocation);
+                        removePickIfPresent(mouseLocation);
                         break;
                 }
             }
         });
-        
+
         picksGraphicalPlot.setLineStyle(SVXYPlot.SOLID);
         picksGraphicalPlot.setPointsVisible(true);
         picksGraphicalPlot.setDrawColor(java.awt.Color.red);
@@ -311,10 +352,10 @@ public class MainWindow extends javax.swing.JFrame {
         gfxPanelCDP.addXYPlot(picksGraphicalPlot);
     }
 
-    /** This method is called from within the constructor to
-     * initialize the form.
-     * WARNING: Do NOT modify this code. The content of this method is
-     * always regenerated by the Form Editor.
+    /**
+     * This method is called from within the constructor to initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is always
+     * regenerated by the Form Editor.
      */
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -607,50 +648,49 @@ private void menuViewImageActionPerformed(java.awt.event.ActionEvent evt) {//GEN
 }//GEN-LAST:event_menuViewImageActionPerformed
 
 private void menuViewWiggleActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuViewWiggleActionPerformed
-        setModeView("wiggle");
-        repaint();
+    setModeView("wiggle");
+    repaint();
 }//GEN-LAST:event_menuViewWiggleActionPerformed
 
 private void menuViewContourActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuViewContourActionPerformed
-        setModeView("contour");
-        repaint();
+    setModeView("contour");
+    repaint();
 }//GEN-LAST:event_menuViewContourActionPerformed
 
 private void menuViewImageWiggleActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuViewImageWiggleActionPerformed
-        setModeView("wiggle,image");
-        repaint();
+    setModeView("wiggle,image");
+    repaint();
 }//GEN-LAST:event_menuViewImageWiggleActionPerformed
 
 private void menuViewImageContourActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuViewImageContourActionPerformed
-        setModeView("contour,image");
-        repaint();
+    setModeView("contour,image");
+    repaint();
 }//GEN-LAST:event_menuViewImageContourActionPerformed
 
 private void btnZoomItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_btnZoomItemStateChanged
-        if (evt.getStateChange() == evt.SELECTED) {
-            getGfxPanelCDP().activateZoom(true);
-        } else {
-            getGfxPanelCDP().activateZoom(false);
-        }
+    if (evt.getStateChange() == evt.SELECTED) {
+        getGfxPanelCDP().activateZoom(true);
+    } else {
+        getGfxPanelCDP().activateZoom(false);
+    }
 }//GEN-LAST:event_btnZoomItemStateChanged
 
 private void btnNextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNextActionPerformed
     printt("btnNextActionPerformed");
 
-
-        if (mapSection.lastIndexOf(section.getTraces()) < 0 || (mapSection.lastIndexOf(section.getTraces()) + 1) == mapSection.size()) {
-            if (!section.isEof()) {
-                section.readFromInputStream(System.in);
-                mapSection.add((Vector<SUTrace>) section.getTraces().clone());
-                if (mapSection.size() > saveSection) {
-                    mapSection.remove(0);
-                }
+    if (mapSection.lastIndexOf(section.getTraces()) < 0 || (mapSection.lastIndexOf(section.getTraces()) + 1) == mapSection.size()) {
+        if (!section.isEof()) {
+            section.readFromInputStream(System.in);
+            mapSection.add((Vector<SUTrace>) section.getTraces().clone());
+            if (mapSection.size() > saveSection) {
+                mapSection.remove(0);
             }
-        } else {
-            section.setTraces(mapSection.get(mapSection.lastIndexOf(section.getTraces()) + 1));
         }
+    } else {
+        section.setTraces(mapSection.get(mapSection.lastIndexOf(section.getTraces()) + 1));
+    }
 
-        showView();
+    showView();
 
 }//GEN-LAST:event_btnNextActionPerformed
 
@@ -658,85 +698,84 @@ private void btnPreviousActionPerformed(java.awt.event.ActionEvent evt) {//GEN-F
     printt("btnPreviousActionPerformed");
     // TODO add your handling code here:
 
-        if (mapSection.indexOf(section.getTraces()) > 0) {
-            section.setTraces(mapSection.get(mapSection.indexOf(section.getTraces()) - 1));
-        }
-        showView();
+    if (mapSection.indexOf(section.getTraces()) > 0) {
+        section.setTraces(mapSection.get(mapSection.indexOf(section.getTraces()) - 1));
+    }
+    showView();
 
 }//GEN-LAST:event_btnPreviousActionPerformed
 
 private void btnHeaderItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_btnHeaderItemStateChanged
-        if (evt.getStateChange() == ItemEvent.DESELECTED) {
-            float fx[] = new float[0];
-            float fy[] = new float[0];
-            getmHeader().update(fx, fy);
-            getGfxPanelCDP().repaint();
-            dlgHeader.dispose();
-        }
+    if (evt.getStateChange() == ItemEvent.DESELECTED) {
+        float fx[] = new float[0];
+        float fy[] = new float[0];
+        getmHeader().update(fx, fy);
+        getGfxPanelCDP().repaint();
+        dlgHeader.dispose();
+    }
 }//GEN-LAST:event_btnHeaderItemStateChanged
 
 private void btnGainActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGainActionPerformed
-        // TODO add your handling code here:
+    // TODO add your handling code here:
 
-        dlgGain.setVisible(true);
-        if (dlgGain.isApply()) {
-            showView();
-        }
+    dlgGain.setVisible(true);
+    if (dlgGain.isApply()) {
+        showView();
+    }
 }//GEN-LAST:event_btnGainActionPerformed
 
 private void menuExitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuExitActionPerformed
-        System.exit(0);
+    System.exit(0);
 }//GEN-LAST:event_menuExitActionPerformed
 
 private void btnClipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnClipActionPerformed
-        // TODO add your handling code here:
-        DialogParametersImage dlgparamimag = new DialogParametersImage(this, true, m_csActor, m_wgActor, panelCDP);
+    // TODO add your handling code here:
+    DialogParametersImage dlgparamimag = new DialogParametersImage(this, true, m_csActor, m_wgActor, panelCDP);
 
-        if (m_csActor != null) {
-            imageperc = m_csActor.getImagPerc();
-            imagebalance = (int) m_csActor.getImagimagebalance();
-        }
-        dlgparamimag.setimage_perc(imageperc);
-        dlgparamimag.setimage_balance(imagebalance);
+    if (m_csActor != null) {
+        imageperc = m_csActor.getImagPerc();
+        imagebalance = (int) m_csActor.getImagimagebalance();
+    }
+    dlgparamimag.setimage_perc(imageperc);
+    dlgparamimag.setimage_balance(imagebalance);
+    if (m_wgActor != null) {
+        wigbperc = m_wgActor.getwigbperc();
+    }
+    dlgparamimag.setwigb_perc(wigbperc);
+    dlgparamimag.setVisible(true);
+    //   dlgparamimag.setVisible(true);
+    int verifyimage = 0;
+    verifyimage = dlgparamimag.getParameterVerifyimage();
+
+    if (verifyimage == 1) {
+        imageperc = dlgparamimag.getimage_perc();
+        imagebalance = (int) dlgparamimag.getimage_balance();
+        wigbperc = dlgparamimag.getwigb_perc();
         if (m_wgActor != null) {
-            wigbperc = m_wgActor.getwigbperc();
+            m_wgActor.setPercParameters(wigbperc);//, wigbclip);
         }
-        dlgparamimag.setwigb_perc(wigbperc);
-        dlgparamimag.setVisible(true);
-        //   dlgparamimag.setVisible(true);
-        int verifyimage = 0;
-        verifyimage = dlgparamimag.getParameterVerifyimage();
+        if (m_csActor != null) {
 
-        if (verifyimage == 1) {
-            imageperc = dlgparamimag.getimage_perc();
-            imagebalance = (int) dlgparamimag.getimage_balance();
-            wigbperc = dlgparamimag.getwigb_perc();
-            if (m_wgActor != null) {
-                m_wgActor.setPercParameters(wigbperc);//, wigbclip);
+            if ((imageperc < 0) || (imageperc > 100)) {
+                imageperc = 100.0f;
             }
-            if (m_csActor != null) {
-
-                if ((imageperc < 0) || (imageperc > 100)) {
-                    imageperc = 100.0f;
-                }
-                m_csActor.setImagePerc(imageperc);
-                if ((imagebalance != 1) && (imagebalance != 0)) {
-                    imagebalance = 0;
-                }
+            m_csActor.setImagePerc(imageperc);
+            if ((imagebalance != 1) && (imagebalance != 0)) {
+                imagebalance = 0;
             }
-            panelCDP.repaint();
         }
+        panelCDP.repaint();
+    }
 }//GEN-LAST:event_btnClipActionPerformed
 
     private void btnTestActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTestActionPerformed
         // TODO add your handling code here:
         printt("btnTest");
-        
-        PicksFileIO p = new PicksFileIO();
-        p.writePicksToFile("/home/cadu/Documents/output.csv", picksListCurrent, section);
-        
-//        picksCurve.update(new float[] {1.0f, 1.5f}, new float[] {1.0f, 1.5f});
 
+        PicksFileIO p = new PicksFileIO();
+        p.writePicksToFile("/home/cadu/Documents/output.csv", picksListActual, section);
+
+//        picksCurve.update(new float[] {1.0f, 1.5f}, new float[] {1.0f, 1.5f});
 
     }//GEN-LAST:event_btnTestActionPerformed
 
@@ -772,7 +811,6 @@ private void btnClipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
         m_cdpOffsetAxis.setLimits(getSkeyValueAt(trc1), getSkeyValueAt(trc2));
 
         m_timeAxis.setLimits(lm[0], lm[1]);
-
 
         panelA.repaint();
         panelB.repaint();
@@ -819,8 +857,6 @@ private void btnClipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
         float d1 = section.getD1();
         float d2 = section.getD2();
 
-
-
         getGfxPanelCDP().setAxesLimits(f1, f1 + n1 * d1, f2, f2 + n2 * d2);
         m_timeAxis.setLimits(f1, f1 + n1 * d1);
 //        m_cdpOffsetAxis.setLimits(f2, f2 + n2 * d2);
@@ -831,7 +867,7 @@ private void btnClipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
         m_csActor.setData(section.getData(), n1, f1, d1, n2, f2, d2);
         m_csActor.setImagePerc(imageperc);
         m_csActor.setbalance(imagebalance);
-        m_csActor.setColormap(m_currMapType,m_currMapColor);
+        m_csActor.setColormap(m_currMapType, m_currMapColor);
         m_gfxPanelColorbar = new GfxPanelColorbar(m_csActor, GfxPanelColorbar.HORIZONTAL);
         colorbarPanel.removeAll();
         colorbarPanel.add(m_gfxPanelColorbar);
@@ -863,7 +899,6 @@ private void btnClipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
 
             JLabel lpkey = new JLabel(pkey.toUpperCase());
             lpkey.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-
 
             JLabel lvalue = new JLabel(String.valueOf(key));
             lvalue.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
@@ -995,10 +1030,9 @@ private void btnClipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
         section.readFromInputStream(System.in);
         mapSection.add((Vector<SUTrace>) section.getTraces().clone());
 
-
     }
-    
-    public void updatePreferences(){
+
+    public void updatePreferences() {
         section.setFormat(preferences.getFormat());
     }
 
@@ -1179,9 +1213,10 @@ private void btnClipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
     int m_currMapColor;
     int m_currMapType;
     Preferences preferences;
-    Vector<SVPoint2D> m_currentCDPVelocityPicks = new Vector<>();
+    List<SVPoint2D> m_currentPicks = new ArrayList<>();
     SVXYPlot picksGraphicalPlot = new SVXYPlot();
-    ArrayList<SVPoint2D> picksListCurrent = new ArrayList<>();
+    ArrayList<SVPoint2D> picksListActual = new ArrayList<>();
+    SVPoint2D pickTemporaryPreview = new SVPoint2D();
 
     /**
      * @return the mHeader
@@ -1210,11 +1245,11 @@ private void btnClipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
     public void setGfxPanelCDP(gfx.SVGraphicsPanel gfxPanelCDP) {
         this.gfxPanelCDP = gfxPanelCDP;
     }
-    
+
     public static void printt(Object x) {
         System.err.println(x);
     }
-    
+
     private void addVelocityPick(float v, float t, int vx, int vy) {
         gfx.SVPoint2D p = new gfx.SVPoint2D();
 
@@ -1223,74 +1258,103 @@ private void btnClipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
         p.ix = vx;
         p.iy = vy;
 
-        m_currentCDPVelocityPicks.add(p);
+        m_currentPicks.add(p);
         updateVelocityPicksCurve(0, 0);
     }
-    
-    private void updatePicksGraphicalPlotFromList() {
-        float[] picksX = new float[picksListCurrent.size()];
-        float[] picksY = new float[picksListCurrent.size()];
-        for (int i = 0; i < picksListCurrent.size(); i++) {
-            picksX[i] = picksListCurrent.get(i).fx;
-            picksY[i] = picksListCurrent.get(i).fy;
+
+    private void updatePicksPlotFromList(List<SVPoint2D> picksList) {
+        float[] picksX = new float[picksList.size()];
+        float[] picksY = new float[picksList.size()];
+        for (int i = 0; i < picksList.size(); i++) {
+            picksX[i] = picksList.get(i).fx;
+            picksY[i] = picksList.get(i).fy;
         }
         picksGraphicalPlot.update(picksX, picksY);
         gfxPanelCDP.repaint();
     }
-    
-    private void addPick(SVPoint2D mouseLocation) {
-        picksListCurrent.add(mouseLocation);
-        picksListCurrent.sort(SVPoint2DComparator.getInstance());        
-        updatePicksGraphicalPlotFromList();
+
+    private void addActualPick(SVPoint2D mouseLocation) {
+        picksListActual.add(mouseLocation);
+        picksListActual.sort(SVPoint2DComparator.getInstance());
+        updatePicksPlotFromList(picksListActual);
     }
-    
-    private void removePick(SVPoint2D mouseLocation) {
+
+    private void updateTemporaryPreviewPick(float fx, float fy) {
+        List<SVPoint2D> picksListPreview = new ArrayList<>(picksListActual);
+        pickTemporaryPreview.fx = fx;
+        pickTemporaryPreview.fy = fy;
+        picksListPreview.add(pickTemporaryPreview);
+        picksListPreview.sort(SVPoint2DComparator.getInstance());
+        updatePicksPlotFromList(picksListPreview);
+    }
+
+    private static boolean isPickNearMouseLocation(SVPoint2D pick, SVPoint2D mouseLocation) {
         final float EPS_X = 0.037f;
         final float EPS_Y = 0.037f;
-        
-        picksListCurrent.stream()
-            .filter(pick -> (Math.abs(pick.fx - mouseLocation.fx) <= EPS_X) && (Math.abs(pick.fy - mouseLocation.fy) <= EPS_Y))
-            .findFirst()
-            .ifPresent(pick -> {
-                printt(String.format("pick.fx: %f, mouseLocation.fx: %f", pick.fx, mouseLocation.fx));
-                picksListCurrent.remove(pick);
-                updatePicksGraphicalPlotFromList();
-            });
+        return (Math.abs(pick.fx - mouseLocation.fx) <= EPS_X) && (Math.abs(pick.fy - mouseLocation.fy) <= EPS_Y);
     }
-    
+
+    private Optional<SVPoint2D> findPickNearMouseLocation(SVPoint2D mouseLocation) {
+        return picksListActual.stream()
+                .filter(pick -> isPickNearMouseLocation(pick, mouseLocation))
+                .findFirst();
+    }
+
+    private void removePickIfPresent(SVPoint2D mouseLocation) {
+        findPickNearMouseLocation(mouseLocation).ifPresent(pick -> {
+            printt("FOUND PICK TO REMOVE");
+            printt(String.format("pick.fx: %f, mouseLocation.fx: %f", pick.fx, mouseLocation.fx));
+            picksListActual.remove(pick);
+            updatePicksPlotFromList(picksListActual);
+        });
+    }
+
+//    private void updateLineGuide(float fx, float fy) {
+//        picksListCurrent
+//
+//    }
+//        
+//        picksListCurrent.stream()
+//            .filter(pick -> isPickNearMouseLocation(pick, mouseLocation))
+//            .findFirst()
+//            .ifPresent(pick -> {
+//                printt(String.format("pick.fx: %f, mouseLocation.fx: %f", pick.fx, mouseLocation.fx));
+//                picksListCurrent.remove(pick);
+//                updatePicksGraphicalPlotFromList();
+//            });
     private void updateVelocityPicksCurve(float v, float t) {
-        if (m_currentCDPVelocityPicks != null && !m_currentCDPVelocityPicks.isEmpty()) {
-            
+        if (m_currentPicks != null && !m_currentPicks.isEmpty()) {
+
             float[] lm = gfxPanelCDP.getAxisLimits();
 //            float[] lm2 = dvwnd.gfxPanelCDP.getAxisLimits();
-            
+
             float ymin = lm[0];
             float ymax = lm[1];
 //            float ymin2 = lm2[0];
 //            float ymax2 = lm2[1];
 //            float xmin2 = lm2[2];
 //            float xmax2 = lm2[3];
-            
+
             Vector<SVPoint2D> picksList = new Vector<>();
             SVPoint2D npick = null;
-            
-            for (int i = 0; i < m_currentCDPVelocityPicks.size(); i++) {
+
+            for (int i = 0; i < m_currentPicks.size(); i++) {
                 npick = new gfx.SVPoint2D();
-                npick.fx = m_currentCDPVelocityPicks.get(i).fx;
-                npick.fy = m_currentCDPVelocityPicks.get(i).fy;
+                npick.fx = m_currentPicks.get(i).fx;
+                npick.fy = m_currentPicks.get(i).fy;
                 picksList.add(npick);
             }
-            
+
             // if (m_cursorOverSemblancemap || m_cursorOverCVS) {
             npick = new gfx.SVPoint2D();
             npick.fx = v;
             npick.fy = t;
             picksList.add(npick);
-            
+
             // Sort velocity picks, increasing time
             gfx.SVPoint2D[] pa = new gfx.SVPoint2D[picksList.size()];
             picksList.toArray(pa);
-            
+
             int np = picksList.size();
             float[] x = new float[np + 2];
             float[] y = new float[np + 2];
@@ -1318,15 +1382,17 @@ private void btnClipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
             printt("y: " + Arrays.toString(y));
             picksGraphicalPlot.update(x, y);
             panelCDP.repaint();
+
         }
     }
 
-    
     private static class SVPoint2DComparator implements java.util.Comparator<gfx.SVPoint2D> {
+
         private static SVPoint2DComparator instance;
-        
-        private SVPoint2DComparator() {}
-        
+
+        private SVPoint2DComparator() {
+        }
+
         public static SVPoint2DComparator getInstance() {
             if (instance == null) {
                 instance = new SVPoint2DComparator();
@@ -1339,5 +1405,5 @@ private void btnClipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
             return Float.compare(o1.fx, o2.fx);
         }
     }
-    
+
 }
