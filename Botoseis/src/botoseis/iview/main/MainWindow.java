@@ -181,24 +181,29 @@ public class MainWindow extends javax.swing.JFrame {
                     p1Zoom = gfxPanelCDP.getMouseLocation();
                 }
                 // press and hold in pick
-                if (!isPreviewPickEnabled && e.getButton() == java.awt.event.MouseEvent.BUTTON1) {
-                    SVPoint2D mouseLocation = gfxPanelCDP.getMouseLocation();
-                    findPickNearMouseLocation(mouseLocation).ifPresentOrElse(
-                            pick -> {
-                                printt("Press and hold pick");
-                                printt(String.format("found pick at %.2f, %.2f", mouseLocation.fx, mouseLocation.fy));
-                                isPreviewPickEnabled = true;
-                            },
-                            () -> {
-                                printt("No pick found");
-                            });
 
-                }
+//                if (!isPreviewPickEnabled && e.getButton() == java.awt.event.MouseEvent.BUTTON1 && !picksListActual.isEmpty()) {
+            
+
+            ////                    SVPoint2D mouseLocation = gfxPanelCDP.getMouseLocation();
+//
+//                    isPreviewPickEnabled = true;
+////                    findPickNearMouseLocation(mouseLocation).ifPresentOrElse(
+////                            pick -> {
+////                                printt("Press and hold pick");
+////                                printt(String.format("found pick at %.2f, %.2f", mouseLocation.fx, mouseLocation.fy));
+////                                isPreviewPickEnabled = true;
+////                            },
+////                            () -> {
+////                                printt("No pick found");
+////                            });
+//
+//                }
             }
 
             @Override
             public void mouseReleased(java.awt.event.MouseEvent e) {
-                printt("CALL mouseReleased");
+                printt("\nmouse: mouseReleased");
 
                 if (btnZoom.isSelected()) {
                     p2Zoom = gfxPanelCDP.getMouseLocation();
@@ -206,7 +211,6 @@ public class MainWindow extends javax.swing.JFrame {
                 }
 
                 if (isPreviewPickEnabled) {
-                    printt("fix preview pick at mouse release location");
                     // add the current temporary pick as an actual pick
                     addActualPick(gfxPanelCDP.getMouseLocation());
                     isPreviewPickEnabled = false;
@@ -228,12 +232,12 @@ public class MainWindow extends javax.swing.JFrame {
 
             @Override
             public void mouseDragged(MouseEvent e) {
-                if (isPreviewPickEnabled) {
-                    SVPoint2D mouseLocation = getGfxPanelCDP().getMouseLocation();
-                    updateTemporaryPreviewPick(mouseLocation.fx, mouseLocation.fy);
-                }
-//                printt(String.format("%.2f, %.2f", mouseLocation.fx, mouseLocation.fy));
 
+                SVPoint2D mouseLocation = getGfxPanelCDP().getMouseLocation();
+                updateTemporaryPreviewPick(mouseLocation.fx, mouseLocation.fy);
+                isPreviewPickEnabled = true;
+
+//                printt(String.format("%.2f, %.2f", mouseLocation.fx, mouseLocation.fy));
 //                findPickNearMouseLocation(mouseLocation).ifPresentOrElse(
 //                        pick -> {
 //                        
@@ -298,13 +302,13 @@ public class MainWindow extends javax.swing.JFrame {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 SVPoint2D mouseLocation = gfxPanelCDP.getMouseLocation();
-                System.err.println();
-                printt("CALL mouseClicked");
-                printt("mouseLocation:");
-                printt("  fx: " + mouseLocation.fx);
-                printt("  fy: " + mouseLocation.fy);
-                printt("  ix: " + mouseLocation.ix);
-                printt("  iy: " + mouseLocation.iy);
+//                System.err.println();
+                printt("\nmouse: mouseClicked");
+//                printt("mouseLocation:");
+//                printt("  fx: " + mouseLocation.fx);
+//                printt("  fy: " + mouseLocation.fy);
+//                printt("  ix: " + mouseLocation.ix);
+//                printt("  iy: " + mouseLocation.iy);
 
                 float XlenghtHI = section.getF2();  // = H(1).sx / scalco
 
@@ -321,18 +325,17 @@ public class MainWindow extends javax.swing.JFrame {
 
                 int trace = n / section.getN1();
 
-                printt("section.getF2() ≡ XlenghtHI:  " + XlenghtHI);
-                printt("section.getD2() ≡ distanciax: " + distanciax);
-                printt("section.getF1() ≡ delrt:      " + delrt);
-                printt("section.getD1() ≡ dt          " + dt);
-                printt("XMatr: " + XMatr);
-                printt("YMatr: " + YMatr);
-                printt("section.getN1() ≡ n_linhamaximo: " + n_linhamaximo);
-                printt("n:     " + n);
-                printt("trace: " + trace);
-
+//                printt("section.getF2() ≡ XlenghtHI:  " + XlenghtHI);
+//                printt("section.getD2() ≡ distanciax: " + distanciax);
+//                printt("section.getF1() ≡ delrt:      " + delrt);
+//                printt("section.getD1() ≡ dt          " + dt);
+//                printt("XMatr: " + XMatr);
+//                printt("YMatr: " + YMatr);
+//                printt("section.getN1() ≡ n_linhamaximo: " + n_linhamaximo);
+//                printt("n:     " + n);
+//                printt("trace: " + trace);
                 SUHeader h = section.getTraces().get(trace).getHeader();
-                printt(String.format("fldr: %d tracf: %d cdp: %d ep: %d offset: %d  time: %.2f", h.fldr, h.tracf, h.cdp, h.ep, h.offset, mouseLocation.fy));
+//                printt(String.format("fldr: %d tracf: %d cdp: %d ep: %d offset: %d  time: %.2f", h.fldr, h.tracf, h.cdp, h.ep, h.offset, mouseLocation.fy));
 
                 switch (evt.getButton()) {
                     case java.awt.event.MouseEvent.BUTTON1:
@@ -348,7 +351,7 @@ public class MainWindow extends javax.swing.JFrame {
         picksGraphicalPlot.setLineStyle(SVXYPlot.SOLID);
         picksGraphicalPlot.setPointsVisible(true);
         picksGraphicalPlot.setDrawColor(java.awt.Color.red);
-        picksGraphicalPlot.setDrawSize(3);
+        picksGraphicalPlot.setDrawSize(2);
         gfxPanelCDP.addXYPlot(picksGraphicalPlot);
     }
 
@@ -1274,6 +1277,7 @@ private void btnClipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
     }
 
     private void addActualPick(SVPoint2D mouseLocation) {
+        printt("CALL addActualPick");
         picksListActual.add(mouseLocation);
         picksListActual.sort(SVPoint2DComparator.getInstance());
         updatePicksPlotFromList(picksListActual);

@@ -25,21 +25,28 @@ import usrdata.SUSection;
 public class PicksFileIO {
 
     public void writePicksToFile(String file, List<SVPoint2D> picksList, SUSection section) {
+        
+        System.err.println("picksList.size(): " + picksList.size());
 
         try (CsvWriter csvWriter = CsvWriter.builder().build(Paths.get(file))) {
             // Write header
-            csvWriter.writeRecord("FFID", "SLOC", "SIN", "CHAN", "TIME");
+            csvWriter.writeRecord("FFID", "SLOC", "CHAN", "TIME");
             
             // Write columns
             for (int i = 0; i < picksList.size(); i++) {
                 SVPoint2D pick = picksList.get(i);
                 int traceIndex = computeNearestTraceIndex(pick, section);
                 SUHeader header = section.getTraces().get(traceIndex).getHeader();
+                
+                // fldr é sequencial, mas não obrigatoriamente sem falhas na sequencia
+                // ep
+                //   número da estação
+                //   não obrigatoriamente sem faltas na sequencia
 
+                
                 csvWriter.writeRecord(
                         String.valueOf(header.fldr),
                         String.valueOf(header.ep),
-                        String.valueOf(header.tracl),
                         String.valueOf(header.tracf),
                         String.valueOf(pick.fy)
                 );
