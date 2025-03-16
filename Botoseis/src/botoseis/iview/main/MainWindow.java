@@ -24,9 +24,12 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Vector;
+import java.util.function.Consumer;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import usrdata.SUHeader;
@@ -203,7 +206,7 @@ public class MainWindow extends javax.swing.JFrame {
 
             @Override
             public void mouseReleased(java.awt.event.MouseEvent e) {
-                printt("\nmouse: mouseReleased");
+                printt("\nMOUSE: mouseReleased");
 
                 if (btnZoom.isSelected()) {
                     p2Zoom = gfxPanelCDP.getMouseLocation();
@@ -214,6 +217,7 @@ public class MainWindow extends javax.swing.JFrame {
                     // add the current temporary pick as an actual pick
                     addActualPick(gfxPanelCDP.getMouseLocation());
                     isPreviewPickEnabled = false;
+                    hasRemovedExistingPick = false;
                 }
             }
 
@@ -234,17 +238,20 @@ public class MainWindow extends javax.swing.JFrame {
             public void mouseDragged(MouseEvent e) {
 
                 SVPoint2D mouseLocation = getGfxPanelCDP().getMouseLocation();
+
+                // Move existing pick
+                //   Remove pick at mouse location at start of dragging
+                //   and preview pick will work as if moving existing pick
+                if (!hasRemovedExistingPick && !isPreviewPickEnabled) {
+                    findPickNearMouseLocation(mouseLocation).ifPresent(pick -> {
+                        hasRemovedExistingPick = true;
+                        picksListActual.remove(pick);
+                        printt("Removed pick at mouse location for moving existing pick");
+                    });
+                }
+
                 updateTemporaryPreviewPick(mouseLocation.fx, mouseLocation.fy);
                 isPreviewPickEnabled = true;
-
-//                printt(String.format("%.2f, %.2f", mouseLocation.fx, mouseLocation.fy));
-//                findPickNearMouseLocation(mouseLocation).ifPresentOrElse(
-//                        pick -> {
-//                        
-//                        },
-//                        () -> {
-//               });
-//               
             }
 
             @Override
@@ -342,7 +349,7 @@ public class MainWindow extends javax.swing.JFrame {
                         addActualPick(mouseLocation);
                         break;
                     case java.awt.event.MouseEvent.BUTTON2:
-                        removePickIfPresent(mouseLocation);
+                        removePickIfNearMouseLocation(mouseLocation);
                         break;
                 }
             }
@@ -1219,7 +1226,7 @@ private void btnClipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
     List<SVPoint2D> m_currentPicks = new ArrayList<>();
     SVXYPlot picksGraphicalPlot = new SVXYPlot();
     ArrayList<SVPoint2D> picksListActual = new ArrayList<>();
-    SVPoint2D pickTemporaryPreview = new SVPoint2D();
+    boolean hasRemovedExistingPick = false;
 
     /**
      * @return the mHeader
@@ -1285,10 +1292,17 @@ private void btnClipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
 
     private void updateTemporaryPreviewPick(float fx, float fy) {
         List<SVPoint2D> picksListPreview = new ArrayList<>(picksListActual);
+        final SVPoint2D pickTemporaryPreview = new SVPoint2D();
         pickTemporaryPreview.fx = fx;
         pickTemporaryPreview.fy = fy;
-        picksListPreview.add(pickTemporaryPreview);
-        picksListPreview.sort(SVPoint2DComparator.getInstance());
+
+        // Insert pick at correct position to maintain the list sorted
+        int insertionPoint = Collections.binarySearch(picksListPreview, pickTemporaryPreview, SVPoint2DComparator.getInstance());
+        if (insertionPoint < 0) {
+            insertionPoint = -insertionPoint - 1;
+        }
+        picksListPreview.add(insertionPoint, pickTemporaryPreview);
+
         updatePicksPlotFromList(picksListPreview);
     }
 
@@ -1304,13 +1318,25 @@ private void btnClipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
                 .findFirst();
     }
 
-    private void removePickIfPresent(SVPoint2D mouseLocation) {
-        findPickNearMouseLocation(mouseLocation).ifPresent(pick -> {
-            printt("FOUND PICK TO REMOVE");
-            printt(String.format("pick.fx: %f, mouseLocation.fx: %f", pick.fx, mouseLocation.fx));
-            picksListActual.remove(pick);
-            updatePicksPlotFromList(picksListActual);
-        });
+    private void removePickIfNearMouseLocation(SVPoint2D mouseLocation) {
+        Iterator<SVPoint2D> iterator = picksListActual.iterator();
+
+        while (iterator.hasNext()) {
+            SVPoint2D pick = iterator.next();
+            if (isPickNearMouseLocation(pick, mouseLocation)) {
+                printt("FOUND PICK TO REMOVE");
+                printt(String.format("pick.fx: %f, mouseLocation.fx: %f", pick.fx, mouseLocation.fx));
+                iterator.remove();
+                updatePicksPlotFromList(picksListActual);
+                break;
+            }
+        }
+//        findPickNearMouseLocation(mouseLocation).ifPresent(pick -> {
+//            printt("FOUND PICK TO REMOVE");
+//            printt(String.format("pick.fx: %f, mouseLocation.fx: %f", pick.fx, mouseLocation.fx));
+//            picksListActual.remove(pick);
+//            updatePicksPlotFromList(picksListActual);
+//        });
     }
 
 //    private void updateLineGuide(float fx, float fy) {
