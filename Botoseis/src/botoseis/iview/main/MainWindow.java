@@ -36,6 +36,7 @@ import usrdata.SUHeader;
 import usrdata.SUSection;
 import usrdata.SUTrace;
 import java.util.stream.Collectors;
+import javax.swing.SwingUtilities;
 
 /**
  *
@@ -46,7 +47,6 @@ public class MainWindow extends javax.swing.JFrame {
     /**
      * Creates new form MainWindow
      */
-    private boolean isPreviewPickEnabled = false;
 
     public MainWindow() {
         initComponents();
@@ -135,7 +135,7 @@ public class MainWindow extends javax.swing.JFrame {
         gfxPanelCDP.addMouseListener(new MouseListener() {
 
             @Override
-            public void mouseClicked(MouseEvent e) {
+            public void mouseClicked(MouseEvent event) {
                 if (btnHeader.isSelected()) {
                     //throw new UnsupportedOperationException("Not supported yet.");
                     SVPoint2D p = getGfxPanelCDP().getMouseLocation();
@@ -171,53 +171,107 @@ public class MainWindow extends javax.swing.JFrame {
 
                     dlgHeader.setVisible(false);
                     dlgHeader.updateHeaders(section.getTraces().get(trace).getHeader());
-                    dlgHeader.setLocation(e.getXOnScreen(), e.getYOnScreen());
+                    dlgHeader.setLocation(event.getXOnScreen(), event.getYOnScreen());
                     dlgHeader.setVisible(true);
                 }
 
+                SVPoint2D mouseLocation = gfxPanelCDP.getMouseLocation();
+//                System.err.println();
+                printt("\nmouse: clicked");
+//                printt("mouseLocation:");
+//                printt("  fx: " + mouseLocation.fx);
+//                printt("  fy: " + mouseLocation.fy);
+//                printt("  ix: " + mouseLocation.ix);
+//                printt("  iy: " + mouseLocation.iy);
+
+                float XlenghtHI = section.getF2();  // = H(1).sx / scalco
+
+                float distanciax = section.getD2();
+                float delrt = section.getF1();  // primeiro tempo do matlab = 0
+
+                float dt = section.getD1(); // = dt do matlab = 0.004
+
+                int XMatr = Math.round((mouseLocation.fx - XlenghtHI) / distanciax) + 1;
+                int YMatr = Math.round((mouseLocation.fy - delrt) / dt) + 1;
+
+                int n_linhamaximo = section.getN1();
+                int n = YMatr - 1 + (XMatr - 1) * (n_linhamaximo);
+
+                int trace = n / section.getN1();
+
+//                printt("section.getF2() ≡ XlenghtHI:  " + XlenghtHI);
+//                printt("section.getD2() ≡ distanciax: " + distanciax);
+//                printt("section.getF1() ≡ delrt:      " + delrt);
+//                printt("section.getD1() ≡ dt          " + dt);
+//                printt("XMatr: " + XMatr);
+//                printt("YMatr: " + YMatr);
+//                printt("section.getN1() ≡ n_linhamaximo: " + n_linhamaximo);
+//                printt("n:     " + n);
+//                printt("trace: " + trace);
+                SUHeader h = section.getTraces().get(trace).getHeader();
+//                printt(String.format("fldr: %d tracf: %d cdp: %d ep: %d offset: %d  time: %.2f", h.fldr, h.tracf, h.cdp, h.ep, h.offset, mouseLocation.fy));
+
+                switch (event.getButton()) {
+                    case java.awt.event.MouseEvent.BUTTON1:
+                        addActualPick(mouseLocation);
+                        break;
+                    case java.awt.event.MouseEvent.BUTTON2:
+                        removePickIfNearMouseLocation(mouseLocation);
+                        break;
+                }
             }
 
             @Override
-            public void mousePressed(MouseEvent e) {
-//                throw new UnsupportedOperationException("Not supported yet.");
+            public void mousePressed(MouseEvent event) {
+                printt("\nMOUSE: pressed");
+
                 if (btnZoom.isSelected()) {
                     p1Zoom = gfxPanelCDP.getMouseLocation();
                 }
-                // press and hold in pick
+                switch (event.getButton()) {
+                    case MouseEvent.BUTTON1:
+                        isLeftMouseButtonPressed = true;
+                        printt("MOUSE: left button pressed");
+                        break;
+                    case MouseEvent.BUTTON3:
+                        isRightMouseButtonPressed = true;
+                        printt("MOUSE: right button pressed");
+                        break;
 
-//                if (!isPreviewPickEnabled && e.getButton() == java.awt.event.MouseEvent.BUTTON1 && !picksListActual.isEmpty()) {
-            
-
-            ////                    SVPoint2D mouseLocation = gfxPanelCDP.getMouseLocation();
-//
-//                    isPreviewPickEnabled = true;
-////                    findPickNearMouseLocation(mouseLocation).ifPresentOrElse(
-////                            pick -> {
-////                                printt("Press and hold pick");
-////                                printt(String.format("found pick at %.2f, %.2f", mouseLocation.fx, mouseLocation.fy));
-////                                isPreviewPickEnabled = true;
-////                            },
-////                            () -> {
-////                                printt("No pick found");
-////                            });
-//
-//                }
+                }
             }
 
             @Override
-            public void mouseReleased(java.awt.event.MouseEvent e) {
-                printt("\nMOUSE: mouseReleased");
+            public void mouseReleased(java.awt.event.MouseEvent event) {
+                printt("\nMOUSE: released");
+                SVPoint2D mouseLocation = gfxPanelCDP.getMouseLocation();
 
                 if (btnZoom.isSelected()) {
                     p2Zoom = gfxPanelCDP.getMouseLocation();
-                    onGraphicsPanelMouseReleased(e);
+                    onGraphicsPanelMouseReleased(event);
                 }
 
-                if (isPreviewPickEnabled) {
+                if (isPrevisualizingWithPreviewPick) {
                     // add the current temporary pick as an actual pick
                     addActualPick(gfxPanelCDP.getMouseLocation());
-                    isPreviewPickEnabled = false;
-                    hasRemovedExistingPick = false;
+                    isPrevisualizingWithPreviewPick = false;
+                    isMovingExistingPick = false;
+                }
+                switch (event.getButton()) {
+                    case MouseEvent.BUTTON1:
+                        printt("MOUSE: left button released");
+
+                        isLeftMouseButtonPressed = false;
+                        break;
+                    case MouseEvent.BUTTON3:
+                        printt("MOUSE: right button released");
+                        isRightMouseButtonPressed = false;
+
+                        // Picks eraser line
+                        isDrawingEraserLine = false;
+                        picksEraserLineGraphicalPlot.setVisible(false);
+                        removePicksAtRange(picksEraserLineStart.fx, mouseLocation.fx);
+                        break;
                 }
             }
 
@@ -235,23 +289,35 @@ public class MainWindow extends javax.swing.JFrame {
         gfxPanelCDP.addMouseMotionListener(new MouseMotionListener() {
 
             @Override
-            public void mouseDragged(MouseEvent e) {
-
+            public void mouseDragged(MouseEvent event) {
                 SVPoint2D mouseLocation = getGfxPanelCDP().getMouseLocation();
-
-                // Move existing pick
-                //   Remove pick at mouse location at start of dragging
-                //   and preview pick will work as if moving existing pick
-                if (!hasRemovedExistingPick && !isPreviewPickEnabled) {
-                    findPickNearMouseLocation(mouseLocation).ifPresent(pick -> {
-                        hasRemovedExistingPick = true;
-                        picksListActual.remove(pick);
-                        printt("Removed pick at mouse location for moving existing pick");
-                    });
+                if (isLeftMouseButtonPressed) {
+                    // Move existing pick
+                    //   Remove pick at mouse location at start of dragging
+                    //   and preview pick will work as if moving existing pick
+                    if (!isMovingExistingPick && !isPrevisualizingWithPreviewPick) {
+                        findPickNearMouseLocation(mouseLocation).ifPresent(pick -> {
+                            isMovingExistingPick = true;
+                            picksListActual.remove(pick);
+                            printt("Removed pick at mouse location for moving existing pick");
+                        });
+                    }
+                    // Preview pick
+                    //   Continously update preview pick while dragging mouse
+                    updateTemporaryPreviewPick(mouseLocation.fx, mouseLocation.fy);
+                    isPrevisualizingWithPreviewPick = true;
+                } else if (isRightMouseButtonPressed) {
+                    if (isDrawingEraserLine) {
+                        SVPoint2D picksEraserLineEnd = mouseLocation;
+                        updatePicksEraserLinePlot(picksEraserLineStart, picksEraserLineEnd);
+                    } else {
+                        printt("Starting picks eraser line");
+                        picksEraserLineStart = mouseLocation;
+                        updatePicksEraserLinePlot(picksEraserLineStart, picksEraserLineStart);
+                        picksEraserLineGraphicalPlot.setVisible(true);
+                        isDrawingEraserLine = true;
+                    }
                 }
-
-                updateTemporaryPreviewPick(mouseLocation.fx, mouseLocation.fy);
-                isPreviewPickEnabled = true;
             }
 
             @Override
@@ -289,7 +355,6 @@ public class MainWindow extends javax.swing.JFrame {
                     SUHeader h = section.getTraces().get(trace).getHeader();
                     tfBar.setText(String.format("fldr: %d tracf: %d cdp: %d ep: %d offset: %d  time: %.2f  amp: %.7f ", h.fldr, h.tracf, h.cdp, h.ep, h.offset, p.fy, act.getData()[n]));
                 }
-//                System.out.println(p.ix+"  "+p.iy+"  "+p.fx+" "+p.fy);
             }
         });
 
@@ -305,61 +370,23 @@ public class MainWindow extends javax.swing.JFrame {
         dlgHeader = new DialogHeaderTrace(this, false);
         dlgGain = new DialogGain(this, true);
 
-        gfxPanelCDP.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                SVPoint2D mouseLocation = gfxPanelCDP.getMouseLocation();
-//                System.err.println();
-                printt("\nmouse: mouseClicked");
-//                printt("mouseLocation:");
-//                printt("  fx: " + mouseLocation.fx);
-//                printt("  fy: " + mouseLocation.fy);
-//                printt("  ix: " + mouseLocation.ix);
-//                printt("  iy: " + mouseLocation.iy);
-
-                float XlenghtHI = section.getF2();  // = H(1).sx / scalco
-
-                float distanciax = section.getD2();
-                float delrt = section.getF1();  // primeiro tempo do matlab = 0
-
-                float dt = section.getD1(); // = dt do matlab = 0.004
-
-                int XMatr = Math.round((mouseLocation.fx - XlenghtHI) / distanciax) + 1;
-                int YMatr = Math.round((mouseLocation.fy - delrt) / dt) + 1;
-
-                int n_linhamaximo = section.getN1();
-                int n = YMatr - 1 + (XMatr - 1) * (n_linhamaximo);
-
-                int trace = n / section.getN1();
-
-//                printt("section.getF2() ≡ XlenghtHI:  " + XlenghtHI);
-//                printt("section.getD2() ≡ distanciax: " + distanciax);
-//                printt("section.getF1() ≡ delrt:      " + delrt);
-//                printt("section.getD1() ≡ dt          " + dt);
-//                printt("XMatr: " + XMatr);
-//                printt("YMatr: " + YMatr);
-//                printt("section.getN1() ≡ n_linhamaximo: " + n_linhamaximo);
-//                printt("n:     " + n);
-//                printt("trace: " + trace);
-                SUHeader h = section.getTraces().get(trace).getHeader();
-//                printt(String.format("fldr: %d tracf: %d cdp: %d ep: %d offset: %d  time: %.2f", h.fldr, h.tracf, h.cdp, h.ep, h.offset, mouseLocation.fy));
-
-                switch (evt.getButton()) {
-                    case java.awt.event.MouseEvent.BUTTON1:
-                        addActualPick(mouseLocation);
-                        break;
-                    case java.awt.event.MouseEvent.BUTTON2:
-                        removePickIfNearMouseLocation(mouseLocation);
-                        break;
-                }
-            }
-        });
-
+//        gfxPanelCDP.addMouseListener(new java.awt.event.MouseAdapter() {
+//            @Override
+//            public void mouseClicked(java.awt.event.MouseEvent evt) {
+//                
+//            }
+//        });
         picksGraphicalPlot.setLineStyle(SVXYPlot.SOLID);
         picksGraphicalPlot.setPointsVisible(true);
-        picksGraphicalPlot.setDrawColor(java.awt.Color.red);
+        picksGraphicalPlot.setDrawColor(java.awt.Color.RED);
         picksGraphicalPlot.setDrawSize(2);
         gfxPanelCDP.addXYPlot(picksGraphicalPlot);
+
+        picksEraserLineGraphicalPlot.setLineStyle(SVXYPlot.SOLID);
+        picksEraserLineGraphicalPlot.setPointsVisible(false);
+        picksEraserLineGraphicalPlot.setDrawColor(java.awt.Color.MAGENTA);
+        picksEraserLineGraphicalPlot.setDrawSize(3);
+        gfxPanelCDP.addXYPlot(picksEraserLineGraphicalPlot);
     }
 
     /**
@@ -1225,8 +1252,14 @@ private void btnClipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
     Preferences preferences;
     List<SVPoint2D> m_currentPicks = new ArrayList<>();
     SVXYPlot picksGraphicalPlot = new SVXYPlot();
+    SVXYPlot picksEraserLineGraphicalPlot = new SVXYPlot();
     ArrayList<SVPoint2D> picksListActual = new ArrayList<>();
-    boolean hasRemovedExistingPick = false;
+    SVPoint2D picksEraserLineStart = new SVPoint2D();
+    private boolean isLeftMouseButtonPressed = false;
+    private boolean isRightMouseButtonPressed = false;
+    private boolean isPrevisualizingWithPreviewPick = false;
+    private boolean isMovingExistingPick = false;
+    private boolean isDrawingEraserLine = false;
 
     /**
      * @return the mHeader
@@ -1270,6 +1303,18 @@ private void btnClipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
 
         m_currentPicks.add(p);
         updateVelocityPicksCurve(0, 0);
+    }
+
+    private void updatePicksEraserLinePlot(SVPoint2D start, SVPoint2D end) {
+        float[] pointsX = new float[2];
+        float[] pointsY = new float[2];
+        pointsX[0] = start.fx;
+        pointsX[1] = end.fx;
+        pointsY[0] = start.fy;
+        pointsY[1] = end.fy;
+//        printt(String.format("START (%.1f,%.1f)    END (%.1f, %.1f)", pointsX[0], pointsX[1], pointsY[0], pointsY[1]));
+        picksEraserLineGraphicalPlot.update(pointsX, pointsY);
+        gfxPanelCDP.repaint();
     }
 
     private void updatePicksPlotFromList(List<SVPoint2D> picksList) {
@@ -1318,6 +1363,25 @@ private void btnClipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
                 .findFirst();
     }
 
+    private void removePicksAtRange(float start, float end) {
+        final float EPS_X = 0.037f;
+        float correctStart;
+        float correctEnd;
+        if (start < end) {
+            correctStart = start - EPS_X;
+            correctEnd = end + EPS_X;
+        } else {
+            correctStart = end - EPS_X;
+            correctEnd = start + EPS_X;
+        }
+
+        picksListActual.removeIf(
+                pick -> pick.fx >= correctStart && pick.fx <= correctEnd
+        );
+
+        updatePicksPlotFromList(picksListActual);
+    }
+
     private void removePickIfNearMouseLocation(SVPoint2D mouseLocation) {
         Iterator<SVPoint2D> iterator = picksListActual.iterator();
 
@@ -1331,27 +1395,8 @@ private void btnClipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
                 break;
             }
         }
-//        findPickNearMouseLocation(mouseLocation).ifPresent(pick -> {
-//            printt("FOUND PICK TO REMOVE");
-//            printt(String.format("pick.fx: %f, mouseLocation.fx: %f", pick.fx, mouseLocation.fx));
-//            picksListActual.remove(pick);
-//            updatePicksPlotFromList(picksListActual);
-//        });
     }
 
-//    private void updateLineGuide(float fx, float fy) {
-//        picksListCurrent
-//
-//    }
-//        
-//        picksListCurrent.stream()
-//            .filter(pick -> isPickNearMouseLocation(pick, mouseLocation))
-//            .findFirst()
-//            .ifPresent(pick -> {
-//                printt(String.format("pick.fx: %f, mouseLocation.fx: %f", pick.fx, mouseLocation.fx));
-//                picksListCurrent.remove(pick);
-//                updatePicksGraphicalPlotFromList();
-//            });
     private void updateVelocityPicksCurve(float v, float t) {
         if (m_currentPicks != null && !m_currentPicks.isEmpty()) {
 
