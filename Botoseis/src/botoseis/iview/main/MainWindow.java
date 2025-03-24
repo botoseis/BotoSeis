@@ -47,7 +47,6 @@ public class MainWindow extends javax.swing.JFrame {
     /**
      * Creates new form MainWindow
      */
-
     public MainWindow() {
         initComponents();
 
@@ -176,13 +175,13 @@ public class MainWindow extends javax.swing.JFrame {
                 }
 
                 SVPoint2D mouseLocation = gfxPanelCDP.getMouseLocation();
-//                System.err.println();
+                System.err.println();
                 printt("\nmouse: clicked");
-//                printt("mouseLocation:");
-//                printt("  fx: " + mouseLocation.fx);
-//                printt("  fy: " + mouseLocation.fy);
-//                printt("  ix: " + mouseLocation.ix);
-//                printt("  iy: " + mouseLocation.iy);
+                printt("mouseLocation:");
+                printt("  fx: " + mouseLocation.fx);
+                printt("  fy: " + mouseLocation.fy);
+                printt("  ix: " + mouseLocation.ix);
+                printt("  iy: " + mouseLocation.iy);
 
                 float XlenghtHI = section.getF2();  // = H(1).sx / scalco
 
@@ -199,15 +198,15 @@ public class MainWindow extends javax.swing.JFrame {
 
                 int trace = n / section.getN1();
 
-//                printt("section.getF2() ≡ XlenghtHI:  " + XlenghtHI);
-//                printt("section.getD2() ≡ distanciax: " + distanciax);
-//                printt("section.getF1() ≡ delrt:      " + delrt);
-//                printt("section.getD1() ≡ dt          " + dt);
-//                printt("XMatr: " + XMatr);
-//                printt("YMatr: " + YMatr);
-//                printt("section.getN1() ≡ n_linhamaximo: " + n_linhamaximo);
-//                printt("n:     " + n);
-//                printt("trace: " + trace);
+                printt("section.getF2() ≡ XlenghtHI:  " + XlenghtHI);
+                printt("section.getD2() ≡ distanciax: " + distanciax);
+                printt("section.getF1() ≡ delrt:      " + delrt);
+                printt("section.getD1() ≡ dt          " + dt);
+                printt("XMatr: " + XMatr);
+                printt("YMatr: " + YMatr);
+                printt("section.getN1() ≡ n_linhamaximo: " + n_linhamaximo);
+                printt("n:     " + n);
+                printt("trace: " + trace);
                 SUHeader h = section.getTraces().get(trace).getHeader();
 //                printt(String.format("fldr: %d tracf: %d cdp: %d ep: %d offset: %d  time: %.2f", h.fldr, h.tracf, h.cdp, h.ep, h.offset, mouseLocation.fy));
 
@@ -669,12 +668,13 @@ public class MainWindow extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
 private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowOpened
+    printt("formWindowOpened()");
     if (!stackData) {
         setModeView("wiggle");
     } else {
         setModeView("image");
     }
-    showView();
+//    showView();  // unecessary since setModeView() always calls showView()
     repaint();
 }//GEN-LAST:event_formWindowOpened
 
@@ -713,7 +713,7 @@ private void btnZoomItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:
 }//GEN-LAST:event_btnZoomItemStateChanged
 
 private void btnNextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNextActionPerformed
-    printt("btnNextActionPerformed");
+    printt("btnNextActionPerformed()");
 
     if (mapSection.lastIndexOf(section.getTraces()) < 0 || (mapSection.lastIndexOf(section.getTraces()) + 1) == mapSection.size()) {
         if (!section.isEof()) {
@@ -732,12 +732,16 @@ private void btnNextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
 }//GEN-LAST:event_btnNextActionPerformed
 
 private void btnPreviousActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPreviousActionPerformed
-    printt("btnPreviousActionPerformed");
+    printt("btnPreviousActionPerformed()");
     // TODO add your handling code here:
+    printt("  section.getTraces().size() = " + section.getTraces().size());
+    printt("  section.getData().length   = " + section.getData().length);
 
     if (mapSection.indexOf(section.getTraces()) > 0) {
         section.setTraces(mapSection.get(mapSection.indexOf(section.getTraces()) - 1));
     }
+    printt("  section.getTraces().size() = " + section.getTraces().size());
+    printt("  section.getData().length   = " + section.getData().length);
     showView();
 
 }//GEN-LAST:event_btnPreviousActionPerformed
@@ -810,7 +814,25 @@ private void btnClipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
         printt("btnTest");
 
         PicksFileIO p = new PicksFileIO();
-        p.writePicksToFile("/home/cadu/Documents/output.csv", picksListActual, section);
+//        p.writePicksToFile("/home/cadu/Documents/output.csv", picksListActual, section);
+
+        PicksFileIO.toTraceIntersectionPointsList(picksListActual, section);
+//        gfxPanelCDP.removeAllActors();
+//        gfxPanelCDP.repaint();
+
+    
+//        int numTraces = section.getN2();
+//        float firstTraceLocation = section.getF2();
+//        float spacingBetweenTraces = section.getD2();
+//        float[] tracesCoordinatesX = new float[numTraces];
+//        for (int i = 0; i < numTraces; i++) {
+////            SUHeader traceHeader = section.getTraces().get(i).getHeader();
+//            tracesCoordinatesX[i] = spacingBetweenTraces * i + firstTraceLocation;
+//            SVPoint2D pickLocation = new SVPoint2D();
+//            pickLocation.fx = tracesCoordinatesX[i];
+//            pickLocation.fy = 1.0f;
+//            addActualPick(pickLocation);
+//        }
 
 //        picksCurve.update(new float[] {1.0f, 1.5f}, new float[] {1.0f, 1.5f});
 
@@ -854,6 +876,7 @@ private void btnClipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
     }
 
     public void setModeView(String modeview) {
+        printt(String.format("setModeView(\"%s\")", modeview));
         wiggle = image = contour = false;
         String split[] = modeview.split(",");
         for (int i = 0; i < split.length; i++) {
@@ -872,6 +895,7 @@ private void btnClipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
     }
 
     private void showView() {
+        printt("showView()");
         getGfxPanelCDP().removeAllActors();
         if (image) {
             showImage();
@@ -887,6 +911,7 @@ private void btnClipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
     }
 
     private void showImage() {
+        printt("showImage()");
         int n1 = section.getN1();
         int n2 = section.getN2();
         float f1 = section.getF1();
@@ -915,6 +940,7 @@ private void btnClipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
     }
 
     public void setAxis() {
+        printt("setAxis()");
         if (!stackData) {
             float min = 0, max = 0;
             int key = 0;
@@ -983,7 +1009,15 @@ private void btnClipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
     }
 
     private void showWiggle(boolean value) {
-
+        printt(String.format("showWiggle(%b)", value));
+//        printt("  section.getN1(): " + section.getN1());
+//        printt("  section.getN2(): " + section.getN2());
+//        printt("  section.getF1(): " + section.getF1());
+//        printt("  section.getF2(): " + section.getF2());
+//        printt("  section.getD1(): " + section.getD1());
+//        printt("  section.getD2(): " + section.getD2());
+//        printt("  section.getData().length: " + section.getData().length);        
+//        printt(Arrays.toString(Arrays.copyOfRange(section.getData(), 0, 501)));
         int n1 = section.getN1();
         int n2 = section.getN2();
         float f1 = section.getF1();
@@ -992,8 +1026,7 @@ private void btnClipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
         float d2 = section.getD2();
         getGfxPanelCDP().setAxesLimits(f1, f1 + n1 * d1, f2, f2 + n2 * d2);
         m_timeAxis.setLimits(f1, f1 + n1 * d1);
-        //m_cdpOffsetAxis.setLimits(f2, f2 + n2 * d2);
-//        System.out.println("  " + n1 + "  " + n2 + "  " + f1 + "  " + f2 + "  " + d1 + "  " + d2 + "  ");
+        m_cdpOffsetAxis.setLimits(f2, f2 + n2 * d2);
         setAxis();
         m_wgActor = new gfx.SVWiggle();
         m_wgActor.setData(section.getData(), n1, f1, d1, n2, f2, d2);
@@ -1058,6 +1091,7 @@ private void btnClipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
     }
 
     private void initData() {
+        printt("initData()");
         section = new usrdata.SUSection();
         updatePreferences();
         section.setPreStakcData(!stackData);
@@ -1165,6 +1199,7 @@ private void btnClipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
         java.awt.EventQueue.invokeLater(new Runnable() {
 
             public void run() {
+                printt("run()");
                 MainWindow wnd = new MainWindow();
                 wnd.setCommandLine(args);
                 wnd.initData();
