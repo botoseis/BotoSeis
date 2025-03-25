@@ -11,6 +11,7 @@ import gfx.SVPoint2D;
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -51,53 +52,6 @@ public class PicksFileIO {
         System.err.println(x);
     }
 
-//    public void foo(SUSection section, List<SVPoint2D> picksList) {
-//        printt("foo()");
-//        List<SUTrace> traces = section.getTraces();
-//        printt("  section.getTraces().size(): " + section.getTraces().size());
-//        float[] offsets = new float[traces.size()];
-//        for (int i = 0; i < traces.size(); i++) {
-//            offsets[i] = traces.get(i).getHeader().offset;
-//            isXcontainedInPickCurve(offsets[i], picksList);
-//        }
-//    }
-//    private float[] picksListToOffsetsList() {
-//        float[] pickOffsets
-//    }
-//    private float isXcontainedInPickCurve(float x, List<SVPoint2D> picksList) {
-//
-//        // if outside pick curve's range, exit already
-//        if (x < picksList.get(0).fx || x > picksList.get(picksList.size() - 1).fx) {
-//            printt(String.format("x: %.2f", x));
-//            return 0;
-//        }
-//
-//        SVPoint2D xPoint = new SVPoint2D();
-//        xPoint.fx = x;
-//
-//        int insertionPoint = Collections.binarySearch(picksList, xPoint, SVPoint2DComparator.getInstance());
-//        if (insertionPoint < 0) {
-//            insertionPoint = -insertionPoint - 1;
-//        }
-//        printt(String.format("x: %.2f | insertion point value: %.2f", x, picksList.get(insertionPoint)));
-//
-    ////        for (int i = 0; i < picksList.size() - 1; i++) {
-////            SVPoint2D lineStart = picksList.get(i);
-////            SVPoint2D lineEnd = picksList.get(i + 1);
-////        }
-//        return 0;
-//    }
-    
-//    public static float computeIntersection_pickXcoordinate_tracesXcoordinates(float traceXcoordinate, float[] tracesXcoordinates) {
-//
-//        int insertionPoint = Collections.binarySearch(picksList, xPoint, SVPoint2DComparator.getInstance());
-//        if (insertionPoint < 0) {
-//            insertionPoint = -insertionPoint - 1;
-//        }
-//
-//    }
-        
-    
     public static SVPoint2D findIntersection_traceXcoordinate_picksLineChart(float traceXcoordinate, List<SVPoint2D> picksCoordinates) {
 
         // if outside pick curve's range, exit already
@@ -119,29 +73,78 @@ public class PicksFileIO {
         if (insertionIndex < 0) {
             insertionIndex = -insertionIndex - 1;
         }
-        SVPoint2D enpointLeft = picksCoordinates.get(insertionIndex - 1);
-        SVPoint2D enpointRight = picksCoordinates.get(insertionIndex);
 
-        printt("insertionIndex: " + insertionIndex);
-//        printt("insertionIndex: " + picksCoordinates.get(insertionIndex));
-        return null;
-    }
-    
-    private static float findIntersection_verticalLine_lineSegment(float x, SVPoint2D endpointLeft, SVPoint2D endpointRight) {
-//        float lineSlope = 
+        SVPoint2D lineSegmentStart = picksCoordinates.get(insertionIndex - 1);
+        SVPoint2D lineSegmentEnd = picksCoordinates.get(insertionIndex);
+
+        intersectionPoint.fy = findIntersectionY_verticalLine_lineSegment(traceXcoordinate, lineSegmentStart, lineSegmentEnd);
+
+        return intersectionPoint;
     }
 
-    public static void toTraceIntersectionPointsList(List<SVPoint2D> pickCoordinates, SUSection section) {
+    private static float findIntersectionY_verticalLine_lineSegment(float x, SVPoint2D endpoint1, SVPoint2D endpoint2) {
+        // m = (y_2 - y_1) / (x_2 - x_1)
+        float m = (endpoint2.fy - endpoint1.fy) / (endpoint2.fx - endpoint1.fx);
+        //    m = (y - y_1) / (x - x_1)
+        // => y - y_1 = m (x - x_1)
+        // => y = m (x - x_1) + y_1
+        return m * (x - endpoint1.fx) + endpoint1.fy;
+    }
+
+    public static List<SVPoint2D> computeTraceIntersectionPoints(List<SVPoint2D> pickCoordinates, SUSection section) {
+        if (pickCoordinates.size() < 2) {
+            throw new IllegalArgumentException("pickCoordinates must contain at least 2 elements.");
+        }
+        
         printt("toTraceInterceptionPointsList()");
         float[] tracesXcoordinates = toTracesXcoordinates(section);
 
         List<SVPoint2D> traceIntersectionPoints = new ArrayList<>();
-        for (int i = 0; i < tracesXcoordinates.length; i++) {
-//            SVPoint2D intersectionPoint =
-            findIntersection_traceXcoordinate_picksLineChart(tracesXcoordinates[i], pickCoordinates);
-//            traceIntersectionPoints.add();
 
+        // Extend left
+        // -----------
+        SVPoint2D intersectionLeft = new SVPoint2D();
+        int indexL = Arrays.binarySearch(tracesXcoordinates, pickCoordinates.get(0).fx);
+        if (indexL >= 0) {
+            // if it is contained in the array, returned index of the search key
+            intersectionLeft.fx = tracesXcoordinates[indexL];
+        } else {
+            // otherwise, returned (-(insertion point) - 1)
+            //   The insertion point is defined as the point at which the key would be inserted
+            //   into the array: the index of the first element greater than the key
+            int insertionPoint = -indexL - 1;
+            intersectionLeft.fx = tracesXcoordinates[insertionPoint - 1];
         }
+        intersectionLeft.fy = findIntersectionY_verticalLine_lineSegment(
+                intersectionLeft.fx,
+                pickCoordinates.get(0),
+                pickCoordinates.get(1));
+        traceIntersectionPoints.add(intersectionLeft);
+
+        for (int i = 0; i < tracesXcoordinates.length; i++) {
+            SVPoint2D intersection = findIntersection_traceXcoordinate_picksLineChart(tracesXcoordinates[i], pickCoordinates);
+            if (intersection != null) {
+                traceIntersectionPoints.add(intersection);
+            }
+        }
+        
+        // Extend right
+        // ------------
+        SVPoint2D intersectionRight = new SVPoint2D();
+        int indexR = Arrays.binarySearch(tracesXcoordinates, pickCoordinates.get(pickCoordinates.size() - 1).fx);
+        if (indexR >= 0) {
+            intersectionRight.fx = tracesXcoordinates[indexR];
+        } else {
+            int insertionPoint = -indexR - 1;
+            intersectionRight.fx = tracesXcoordinates[insertionPoint];
+        }
+        intersectionRight.fy = findIntersectionY_verticalLine_lineSegment(
+                intersectionRight.fx,
+                pickCoordinates.get(pickCoordinates.size() - 2),
+                pickCoordinates.get(pickCoordinates.size() - 1));
+        traceIntersectionPoints.add(intersectionRight);
+
+        return traceIntersectionPoints;
     }
 
     private static float[] toTracesXcoordinates(SUSection section) {
@@ -157,17 +160,17 @@ public class PicksFileIO {
 
     public void writePicksToFile(String file, List<SVPoint2D> picksList, SUSection section) {
 
-//        foo(section, picksList);
-        toTraceIntersectionPointsList(picksList, section);
-        System.err.println("picksList.size(): " + picksList.size());
+        List<SVPoint2D> picksAtTraces = computeTraceIntersectionPoints(picksList, section);
+        printt("picksList.size(): " + picksList.size());
+        printt("traceIntersectionPoints.size(): " + picksAtTraces.size());
 
         try (CsvWriter csvWriter = CsvWriter.builder().build(Paths.get(file))) {
             // Write header
             csvWriter.writeRecord("FFID", "SLOC", "CHAN", "TIME");
 
             // Write columns
-            for (int i = 0; i < picksList.size(); i++) {
-                SVPoint2D pick = picksList.get(i);
+            for (int i = 0; i < picksAtTraces.size(); i++) {
+                SVPoint2D pick = picksAtTraces.get(i);
                 int traceIndex = computeNearestTraceIndex(pick, section);
                 SUHeader header = section.getTraces().get(traceIndex).getHeader();
 

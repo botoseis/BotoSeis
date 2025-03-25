@@ -814,9 +814,18 @@ private void btnClipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
         printt("btnTest");
 
         PicksFileIO p = new PicksFileIO();
-//        p.writePicksToFile("/home/cadu/Documents/output.csv", picksListActual, section);
+        p.writePicksToFile("/home/cadu/Documents/output.csv", picksListActual, section);
 
-        PicksFileIO.toTraceIntersectionPointsList(picksListActual, section);
+        List<SVPoint2D> traceIntersectionPoints = PicksFileIO.computeTraceIntersectionPoints(picksListActual, section);
+        
+        printt("traceIntersectionPoints.size()" + traceIntersectionPoints.size());
+        for (SVPoint2D intersection : traceIntersectionPoints) {
+            printt(intersection.toString());
+        }
+        
+        updatePicksPlotFromList(traceIntersectionPoints);
+        
+        
 //        gfxPanelCDP.removeAllActors();
 //        gfxPanelCDP.repaint();
 
@@ -1364,7 +1373,7 @@ private void btnClipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
     }
 
     private void addActualPick(SVPoint2D mouseLocation) {
-        printt("CALL addActualPick");
+        printt("addActualPick(...)");
         picksListActual.add(mouseLocation);
         picksListActual.sort(SVPoint2DComparator.getInstance());
         updatePicksPlotFromList(picksListActual);
