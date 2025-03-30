@@ -414,6 +414,8 @@ public class MainWindow extends javax.swing.JFrame {
         btnGain = new javax.swing.JButton();
         btnClip = new javax.swing.JButton();
         btnTest = new javax.swing.JButton();
+        btnSavePicks = new javax.swing.JButton();
+        btnLoadPicks = new javax.swing.JButton();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         menuExit = new javax.swing.JMenuItem();
@@ -562,7 +564,7 @@ public class MainWindow extends javax.swing.JFrame {
         });
         jToolBar1.add(btnClip);
 
-        btnTest.setText("TESTAR");
+        btnTest.setText("TEST");
         btnTest.setFocusable(false);
         btnTest.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         btnTest.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
@@ -572,6 +574,28 @@ public class MainWindow extends javax.swing.JFrame {
             }
         });
         jToolBar1.add(btnTest);
+
+        btnSavePicks.setText("Save picks");
+        btnSavePicks.setFocusable(false);
+        btnSavePicks.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        btnSavePicks.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        btnSavePicks.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnSavePicksActionPerformed(evt);
+            }
+        });
+        jToolBar1.add(btnSavePicks);
+
+        btnLoadPicks.setText("Load picks");
+        btnLoadPicks.setFocusable(false);
+        btnLoadPicks.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        btnLoadPicks.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        btnLoadPicks.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnLoadPicksActionPerformed(evt);
+            }
+        });
+        jToolBar1.add(btnLoadPicks);
 
         jMenu1.setText("File");
 
@@ -813,29 +837,25 @@ private void btnClipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
         // TODO add your handling code here:
         printt("btnTest");
 
-        PicksFileIO p = new PicksFileIO();
-        p.writePicksToFile("/home/cadu/Documents/output.csv", picksListActual, section);
-
-        List<SVPoint2D> traceIntersectionPoints = PicksFileIO.computeTraceIntersectionPoints(picksListActual, section);
-        
-        printt("traceIntersectionPoints.size()" + traceIntersectionPoints.size());
-        for (SVPoint2D intersection : traceIntersectionPoints) {
-            printt(intersection.toString());
-        }
-        
-        updatePicksPlotFromList(traceIntersectionPoints);
-        
-        
+//        PicksFileIO p = new PicksFileIO();
+//        p.writePicksToFile("/home/cadu/Documents/output.csv", picksListActual, section);
+//
+//        List<SVPoint2D> traceIntersectionPoints = PicksFileIO.computeTraceIntersectionPoints(picksListActual, section);
+//        
+//        printt("traceIntersectionPoints.size()" + traceIntersectionPoints.size());
+//        for (SVPoint2D intersection : traceIntersectionPoints) {
+//            printt(intersection.toString());
+//        }
+//        
+//        updatePicksPlotFromList(traceIntersectionPoints);
 //        gfxPanelCDP.removeAllActors();
 //        gfxPanelCDP.repaint();
-
-    
 //        int numTraces = section.getN2();
 //        float firstTraceLocation = section.getF2();
 //        float spacingBetweenTraces = section.getD2();
 //        float[] tracesCoordinatesX = new float[numTraces];
 //        for (int i = 0; i < numTraces; i++) {
-////            SUHeader traceHeader = section.getTraces().get(i).getHeader();
+    ////            SUHeader traceHeader = section.getTraces().get(i).getHeader();
 //            tracesCoordinatesX[i] = spacingBetweenTraces * i + firstTraceLocation;
 //            SVPoint2D pickLocation = new SVPoint2D();
 //            pickLocation.fx = tracesCoordinatesX[i];
@@ -846,6 +866,26 @@ private void btnClipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
 //        picksCurve.update(new float[] {1.0f, 1.5f}, new float[] {1.0f, 1.5f});
 
     }//GEN-LAST:event_btnTestActionPerformed
+
+    private void btnSavePicksActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSavePicksActionPerformed
+        printt("btnSavePicksActionPerformed(evt)");
+        if (picksListActual.size() < 2) {
+            printt("unable to save a single pick. Cancelling operation.");
+            return;
+        }
+
+        PicksFileIO.writePicksToFile("/home/cadu/Documents/output.csv", picksListActual, section);
+
+    }//GEN-LAST:event_btnSavePicksActionPerformed
+
+    private void btnLoadPicksActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLoadPicksActionPerformed
+        printt("btnLoadPicksActionPerformed(evt)");
+
+        ArrayList<SVPoint2D> picks = PicksFileIO.readPicksFromFile("/home/cadu/Documents/output.csv", section);
+        picksListActual = picks;
+        updatePicksPlotFromList(picks);
+
+    }//GEN-LAST:event_btnLoadPicksActionPerformed
 
     private void onGraphicsPanelMouseReleased(MouseEvent e) {
         float lm[] = getGfxPanelCDP().getAxisLimits();
@@ -1220,8 +1260,10 @@ private void btnClipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
     private javax.swing.JButton btnClip;
     private javax.swing.JButton btnGain;
     private javax.swing.JToggleButton btnHeader;
+    private javax.swing.JButton btnLoadPicks;
     private javax.swing.JButton btnNext;
     private javax.swing.JButton btnPrevious;
+    private javax.swing.JButton btnSavePicks;
     private javax.swing.JButton btnTest;
     private javax.swing.JToggleButton btnZoom;
     private javax.swing.JPanel colorbarPanel;
