@@ -25,6 +25,7 @@ import java.awt.event.MouseMotionListener;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
@@ -738,6 +739,10 @@ private void btnZoomItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:
 
 private void btnNextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNextActionPerformed
     printt("btnNextActionPerformed()");
+    printt("  section.getTraces().size()                      = " + section.getTraces().size());
+    printt("  mapSection.size()                               = " + mapSection.size());
+    printt("  mapSection.lastIndexOf(section.getTraces())     = " + mapSection.lastIndexOf(section.getTraces()));
+    printt("  mapSection.lastIndexOf(section.getTraces()) + 1 = " + String.valueOf(mapSection.lastIndexOf(section.getTraces()) + 1));
 
     if (mapSection.lastIndexOf(section.getTraces()) < 0 || (mapSection.lastIndexOf(section.getTraces()) + 1) == mapSection.size()) {
         if (!section.isEof()) {
@@ -751,21 +756,27 @@ private void btnNextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
         section.setTraces(mapSection.get(mapSection.lastIndexOf(section.getTraces()) + 1));
     }
 
+    // PICKS LOGIC
+//    mapSectionPicks.add((ArrayList<SVPoint2D>) picksListActual.clone());
+//    section.getT
+//    hashMapPicks.put(, picksListActual)
+    
+    clearPicks();
     showView();
 
 }//GEN-LAST:event_btnNextActionPerformed
 
 private void btnPreviousActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPreviousActionPerformed
     printt("btnPreviousActionPerformed()");
-    // TODO add your handling code here:
-    printt("  section.getTraces().size() = " + section.getTraces().size());
-    printt("  section.getData().length   = " + section.getData().length);
+    printt("  section.getTraces().size()                  = " + section.getTraces().size());
+    printt("  mapSection.size()                           = " + mapSection.size());
+    printt("  mapSection.indexOf(section.getTraces())     = " + mapSection.indexOf(section.getTraces()));
+    printt("  mapSection.indexOf(section.getTraces()) - 1 = " + String.valueOf(mapSection.indexOf(section.getTraces()) - 1));
 
     if (mapSection.indexOf(section.getTraces()) > 0) {
         section.setTraces(mapSection.get(mapSection.indexOf(section.getTraces()) - 1));
     }
-    printt("  section.getTraces().size() = " + section.getTraces().size());
-    printt("  section.getData().length   = " + section.getData().length);
+    clearPicks();
     showView();
 
 }//GEN-LAST:event_btnPreviousActionPerformed
@@ -1331,6 +1342,8 @@ private void btnClipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
     float imageperc;
     float wigbperc;
     ArrayList<Vector<SUTrace>> mapSection = new ArrayList<Vector<SUTrace>>();
+    ArrayList<ArrayList<SVPoint2D>> mapSectionPicks = new ArrayList<>();
+    HashMap<Integer, ArrayList<SVPoint2D>> hashMapPicks = new HashMap<>();
     DialogHeaderTrace dlgHeader;
     DialogGain dlgGain;
     int m_currMapColor;
@@ -1400,6 +1413,12 @@ private void btnClipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
         pointsY[1] = end.fy;
 //        printt(String.format("START (%.1f,%.1f)    END (%.1f, %.1f)", pointsX[0], pointsX[1], pointsY[0], pointsY[1]));
         picksEraserLineGraphicalPlot.update(pointsX, pointsY);
+        gfxPanelCDP.repaint();
+    }
+
+    private void clearPicks() {
+        picksListActual.clear();
+        picksGraphicalPlot.clear();
         gfxPanelCDP.repaint();
     }
 

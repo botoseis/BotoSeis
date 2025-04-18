@@ -70,10 +70,8 @@ public class PicksFileIO {
 
         int result = Collections.binarySearch(picksCoordinates, traceXcoordinatePoint2D, SVPoint2DComparator.getInstance());
 
-//        printt("  picksCoordinates.size() " + picksCoordinates.size());
         // Collections.binarySearch(...)
         // the return value will be >= 0 if and only if the key is found
-//        printt("  result: " + result);
         if (result < 0) {
             // if the search key is not contained in the list
             //   returns (-(insertion point) - 1). The insertion point is defined as the point at
@@ -193,11 +191,8 @@ public class PicksFileIO {
     }
 
     public static void writePicksToFile(String file, List<SVPoint2D> picksList, SUSection section) {
-        printt("\nwritePicksToFile(...)");
 
         List<SVPoint2D> picksAtTraces = computeTraceIntersectionPoints(picksList, section);
-        printt("  picksList.size()     " + picksList.size());
-        printt("  picksAtTraces.size() " + picksAtTraces.size());
 
         try (CsvWriter csvWriter = CsvWriter.builder().build(Paths.get(file))) {
             // Write header
@@ -223,14 +218,6 @@ public class PicksFileIO {
                         String.valueOf(header.offset),
                         String.valueOf(pick.fy)
                 );
-                printt(String.valueOf(header.tracl),
-                        String.valueOf(header.tracr),
-                        String.valueOf(header.fldr),
-                        String.valueOf(header.tracf),
-                        String.valueOf(header.ep),
-                        String.valueOf(header.offset),
-                        String.valueOf(pick.fx),
-                        String.valueOf(pick.fy));
             }
         } catch (IOException ex) {
             Logger.getLogger(PicksFileIO.class.getName()).log(Level.SEVERE, null, ex);
@@ -245,13 +232,11 @@ public class PicksFileIO {
     }
 
     public static ArrayList<SVPoint2D> readPicksFromFile(String filename, SUSection section) {
-        printt("\nreadPicksFromFile(...)");
 
         ArrayList<SVPoint2D> picksList = new ArrayList<>();
         Path file = Paths.get(filename);
         try (CsvReader<NamedCsvRecord> csvReader = CsvReader.builder().ofNamedCsvRecord(file)) {
             csvReader.forEach(record -> {
-                printt(record.getField("tracf"));
                 SVPoint2D pick = new SVPoint2D();
                 pick.fy = Float.parseFloat(record.getField("time"));
                 int traceIndex = Integer.parseInt(record.getField("tracf"));
