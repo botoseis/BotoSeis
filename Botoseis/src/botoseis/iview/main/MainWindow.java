@@ -744,6 +744,15 @@ private void btnNextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
     printt("  mapSection.lastIndexOf(section.getTraces())     = " + mapSection.lastIndexOf(section.getTraces()));
     printt("  mapSection.lastIndexOf(section.getTraces()) + 1 = " + String.valueOf(mapSection.lastIndexOf(section.getTraces()) + 1));
 
+    // Save picks from current gather in memory
+    // ----------------------------------------
+    printt("  section.getTraces().get(0).getHeader().ep: " + section.getTraces().get(0).getHeader().ep);
+    printt("  hashMapPicks.size(): " + hashMapPicks.size());
+    if (!picksListActual.isEmpty()) {
+        int current_ep = section.getTraces().get(0).getHeader().ep;
+        hashMapPicks.put(current_ep, (ArrayList<SVPoint2D>) picksListActual.clone());
+    }
+
     if (mapSection.lastIndexOf(section.getTraces()) < 0 || (mapSection.lastIndexOf(section.getTraces()) + 1) == mapSection.size()) {
         if (!section.isEof()) {
             section.readFromInputStream(System.in);
@@ -756,14 +765,19 @@ private void btnNextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
         section.setTraces(mapSection.get(mapSection.lastIndexOf(section.getTraces()) + 1));
     }
 
-    // PICKS LOGIC
-//    mapSectionPicks.add((ArrayList<SVPoint2D>) picksListActual.clone());
-//    section.getT
-//    hashMapPicks.put(, picksListActual)
-    
+    // Load picks from new gather if they exist
+    // ----------------------------------------
+    // section now has changed to another gather
+    // lets load picks from it if it exists
     clearPicks();
-    showView();
+    int new_ep = section.getTraces().get(0).getHeader().ep;
+    Optional.ofNullable(hashMapPicks.get(new_ep)).ifPresent(picks -> {
+        picksListActual = picks;
+        updatePicksPlotFromList(picksListActual);
+    });
+    printt(hashMapPicks.keySet().toString());
 
+    showView();
 }//GEN-LAST:event_btnNextActionPerformed
 
 private void btnPreviousActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPreviousActionPerformed
@@ -773,12 +787,34 @@ private void btnPreviousActionPerformed(java.awt.event.ActionEvent evt) {//GEN-F
     printt("  mapSection.indexOf(section.getTraces())     = " + mapSection.indexOf(section.getTraces()));
     printt("  mapSection.indexOf(section.getTraces()) - 1 = " + String.valueOf(mapSection.indexOf(section.getTraces()) - 1));
 
+    // Save picks from current gather in memory
+    // ----------------------------------------
+    printt("  section.getTraces().get(0).getHeader().ep: " + section.getTraces().get(0).getHeader().ep);
+    printt("  hashMapPicks.size(): " + hashMapPicks.size());
+    if (!picksListActual.isEmpty()) {
+        int current_ep = section.getTraces().get(0).getHeader().ep;
+        hashMapPicks.put(current_ep, (ArrayList<SVPoint2D>) picksListActual.clone());
+    }
+
     if (mapSection.indexOf(section.getTraces()) > 0) {
         section.setTraces(mapSection.get(mapSection.indexOf(section.getTraces()) - 1));
     }
-    clearPicks();
-    showView();
 
+    clearPicks();
+
+    // Load picks from new gather if they exist
+    // ----------------------------------------
+    // section now has changed to another gather
+    // lets load picks from it if it exists
+    clearPicks();
+    int new_ep = section.getTraces().get(0).getHeader().ep;
+    Optional.ofNullable(hashMapPicks.get(new_ep)).ifPresent(picks -> {
+        picksListActual = picks;
+        updatePicksPlotFromList(picksListActual);
+    });
+    printt(hashMapPicks.keySet().toString());
+
+    showView();
 }//GEN-LAST:event_btnPreviousActionPerformed
 
 private void btnHeaderItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_btnHeaderItemStateChanged
