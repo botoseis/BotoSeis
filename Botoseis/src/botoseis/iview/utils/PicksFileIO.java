@@ -8,12 +8,17 @@ import de.siegmar.fastcsv.reader.CsvReader;
 import de.siegmar.fastcsv.reader.NamedCsvRecord;
 import de.siegmar.fastcsv.writer.CsvWriter;
 import gfx.SVPoint2D;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Writer;
 import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -190,9 +195,51 @@ public class PicksFileIO {
         return tracesGraphicalXcoordinates;
     }
 
-    public static void writePicksToFile(String file, List<SVPoint2D> picksList, SUSection section) {
+//    public static void writePicksToFile(String file, List<SVPoint2D> pickList, SUSection section) {
+//        int currentGatherIndex = section.getTraces().get(0).getHeader().tracf;
+//        
+//        
+//        
+//    }
+    public static void writePicksFromAllGathersToFile(String file, Map<Integer, ArrayList<SVPoint2D>> mapOfPickLists, SUSection section) {
+        printt("writePicksFromAllGathersToFile");
 
-        List<SVPoint2D> picksAtTraces = computeTraceIntersectionPoints(picksList, section);
+        try (CsvWriter csvWriter = CsvWriter.builder().build(Paths.get(file))) {
+            // Write header
+            csvWriter.writeRecord("tracl", "tracr", "fldr", "tracf", "ep", "offset", "time");
+
+            // Write content
+            printt("  mapOfPickLists.keySet(): " + mapOfPickLists.keySet().toString());
+
+            for (ArrayList<SVPoint2D> pickList : mapOfPickLists.values()) {
+                printt("  pickList.size(): ", pickList.size());
+                List<SVPoint2D> picksAtTraces = computeTraceIntersectionPoints(pickList, section);
+                for (int i = 0; i < picksAtTraces.size(); i++) {
+                    SVPoint2D pick = picksAtTraces.get(i);
+                    int traceIndex = computeNearestTraceIndex(pick, section);
+                    SUHeader header = section.getTraces().get(traceIndex).getHeader();
+                    printt("  header.ep: " + header.ep);
+                    csvWriter.writeRecord(
+                            String.valueOf(header.tracl),
+                            String.valueOf(header.tracr),
+                            String.valueOf(header.fldr),
+                            String.valueOf(header.tracf),
+                            String.valueOf(header.ep),
+                            String.valueOf(header.offset),
+                            String.valueOf(pick.fy)
+                    );
+                }
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(PicksFileIO.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+    }
+
+//    public static void 
+    public static void writePicksToFileDeprecated(String file, List<SVPoint2D> pickList, SUSection section) {
+
+        List<SVPoint2D> picksAtTraces = computeTraceIntersectionPoints(pickList, section);
 
         try (CsvWriter csvWriter = CsvWriter.builder().build(Paths.get(file))) {
             // Write header
@@ -230,6 +277,18 @@ public class PicksFileIO {
         float spacingBetweenTraces = section.getD2();
         return firstTraceLocationX + traceIndex * spacingBetweenTraces;
     }
+
+//    public static void appendPicksToCsv(String pathName, List<SVPoint2D> pickList) {
+//        try (CsvWriter csvWriter = CsvWriter.builder().build(new BufferedWriter(new FileWriter(pathName, true)))) {
+//            csvWriter.writeRecord("nada", "tudo", "algo");
+//        } catch (Exception e) {
+//            throw new RuntimeException(e);
+//        }
+    ////        try(CsvWriter.builder().b) {
+////
+////        }
+//    }
+
 
     public static ArrayList<SVPoint2D> readPicksFromFile(String filename, SUSection section) {
 
@@ -281,6 +340,90 @@ public class PicksFileIO {
         int trace = n / section.getN1();
 
         return trace;
+    }
+
+    private static final String CSV_HEADER = "tracl,tracr,fldr,tracf,ep,offset,time\n";
+
+    public static void writePicksFromCurrentGather(String filename, List<SVPoint2D> pickList, SUSection currentGather) {
+        if (!Files.exists(Paths.get(filename))) {
+            writeHeadersEmptyFile(filename);
+        }
+
+        String gatherKey = "fldr";
+        String currentValueOfGatherKey = String.valueOf(currentGather.getTraces().get(0).getHeader().fldr);
+        
+        filterCsvNotEqualTo(filename, gatherKey, currentValueOfGatherKey);
+
+        appendPickListCsv(filename, pickList, currentGather);
+    }
+
+    private static void writeHeadersEmptyFile(String filename) {
+        try {
+            Files.writeString(Paths.get(filename), CSV_HEADER, StandardOpenOption.CREATE);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void filterCsvNotEqualTo(String pathName, String targetColumn, String targetValue) {
+        Path path = Paths.get(pathName);
+
+        List<String> header;
+
+        List<NamedCsvRecord> recordsToKeep = new ArrayList<>();
+        try (CsvReader<NamedCsvRecord> csvReader = CsvReader.builder().ofNamedCsvRecord(path)) {
+
+            Iterator<NamedCsvRecord> iterator = csvReader.iterator();
+
+            // First csv record
+            if (iterator.hasNext()) {
+                NamedCsvRecord firstRecord = iterator.next();
+                header = firstRecord.getHeader();
+                if (!firstRecord.getField(targetColumn).equals(targetValue)) {
+                    recordsToKeep.add(firstRecord);
+                }
+            } else {
+                return;
+            }
+
+            // Remaining csv records
+            recordsToKeep.addAll(csvReader.stream()
+                    .filter(record -> !record.getField(targetColumn).equals(targetValue))
+                    .collect(Collectors.toList()));
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        try (CsvWriter csvWriter = CsvWriter.builder().build(path)) {
+            csvWriter.writeRecord(header);
+            recordsToKeep.forEach(recordToKeep -> {
+                csvWriter.writeRecord(recordToKeep.getFields());
+            });
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void appendPickListCsv(String filename, List<SVPoint2D> pickList, SUSection currentSection) {
+        List<SVPoint2D> picksAtTraces = computeTraceIntersectionPoints(pickList, currentSection);
+        try (CsvWriter csvWriter = CsvWriter.builder().build(new BufferedWriter(new FileWriter(filename, true)))) {
+            for (SVPoint2D pick : picksAtTraces) {
+                int traceIndex = computeNearestTraceIndex(pick, currentSection);
+                SUHeader header = currentSection.getTraces().get(traceIndex).getHeader();
+                csvWriter.writeRecord(
+                        String.valueOf(header.tracl),
+                        String.valueOf(header.tracr),
+                        String.valueOf(header.fldr),
+                        String.valueOf(header.tracf),
+                        String.valueOf(header.ep),
+                        String.valueOf(header.offset),
+                        String.valueOf(pick.fy)
+                );
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }
