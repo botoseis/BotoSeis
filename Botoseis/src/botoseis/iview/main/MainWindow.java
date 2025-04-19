@@ -25,20 +25,16 @@ import java.awt.event.MouseMotionListener;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.TreeMap;
 import java.util.Vector;
-import java.util.function.Consumer;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import usrdata.SUHeader;
 import usrdata.SUSection;
 import usrdata.SUTrace;
-import java.util.stream.Collectors;
-import javax.swing.SwingUtilities;
 
 /**
  *
@@ -743,12 +739,17 @@ private void btnNextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
 
     // Save picks from current gather in memory
     // ----------------------------------------
-    printt("  section.getTraces().get(0).getHeader().ep: " + section.getTraces().get(0).getHeader().ep);
+    printt("  section.getTraces().get(0).getHeader().fldr: " + section.getTraces().get(0).getHeader().fldr);
     printt("  treeMapPicks.size(): " + mapOfPickLists.size());
     if (picksListActual.size() > 1) {
-        int current_ep = section.getTraces().get(0).getHeader().ep;
-        mapOfPickLists.put(current_ep, (ArrayList<SVPoint2D>) picksListActual.clone());
-        printt("saved to memory ep " + current_ep);
+        int currentGatherKey = section.getTraces().get(0).getHeader().fldr;
+        mapOfPickLists.put(currentGatherKey, (ArrayList<SVPoint2D>) picksListActual.clone());
+        printt("saved to memory ep " + currentGatherKey);
+    }
+    // Save picks from current gather in file
+    // --------------------------------------
+    if (picksListActual.size() > 1) {
+        PicksFileIO.savePicksFromCurrentGather("/home/cadu/Documents/test1.csv", picksListActual, section);
     }
 
     // TODO
@@ -757,8 +758,6 @@ private void btnNextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
     printt("  mapSection.size()                               = " + mapSection.size());
     printt("  mapSection.lastIndexOf(section.getTraces())     = " + mapSection.lastIndexOf(section.getTraces()));
     printt("  mapSection.lastIndexOf(section.getTraces()) + 1 = " + String.valueOf(mapSection.lastIndexOf(section.getTraces()) + 1));
-
-//    loadedGatherList.add
     if (mapSection.lastIndexOf(section.getTraces()) < 0 || (mapSection.lastIndexOf(section.getTraces()) + 1) == mapSection.size()) {
         if (!section.isEof()) {
             section.readFromInputStream(System.in);
@@ -775,13 +774,20 @@ private void btnNextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
     // ----------------------------------------
     // section now has changed to another gather
     // lets load picks from it if it exists
-    clearPicks();
-    int new_ep = section.getTraces().get(0).getHeader().ep;
-    Optional.ofNullable(mapOfPickLists.get(new_ep)).ifPresent(picks -> {
+    int newGatherKey = section.getTraces().get(0).getHeader().fldr;
+    // prefer to load from memory
+    ArrayList<SVPoint2D> picks = mapOfPickLists.get(newGatherKey);
+    if (picks != null) {
         picksListActual = picks;
         updatePicksPlotFromList(picksListActual);
-    });
-    printt(mapOfPickLists.keySet().toString());
+    } else {
+        // otherwise try to load from file
+        picks = PicksFileIO.loadPicksFromGather("/home/cadu/Documents/test1.csv", newGatherKey, section);
+        if (!picks.isEmpty()) {
+            picksListActual = picks;
+            updatePicksPlotFromList(picksListActual);
+        }
+    }
 
     showView();
 }//GEN-LAST:event_btnNextActionPerformed
@@ -796,6 +802,11 @@ private void btnPreviousActionPerformed(java.awt.event.ActionEvent evt) {//GEN-F
     if (picksListActual.size() > 1) {
         int current_ep = section.getTraces().get(0).getHeader().ep;
         mapOfPickLists.put(current_ep, (ArrayList<SVPoint2D>) picksListActual.clone());
+    }
+    // Save picks from current gather in file
+    // --------------------------------------
+    if (picksListActual.size() > 1) {
+        PicksFileIO.savePicksFromCurrentGather("/home/cadu/Documents/test1.csv", picksListActual, section);
     }
 
     // TODO
@@ -813,12 +824,21 @@ private void btnPreviousActionPerformed(java.awt.event.ActionEvent evt) {//GEN-F
     // section now has changed to another gather
     // lets load picks from it if it exists
     clearPicks();
-    int new_ep = section.getTraces().get(0).getHeader().ep;
-    Optional.ofNullable(mapOfPickLists.get(new_ep)).ifPresent(picks -> {
+    int newGatherKey = section.getTraces().get(0).getHeader().fldr;
+        // prefer to load from memory
+    ArrayList<SVPoint2D> picks = mapOfPickLists.get(newGatherKey);
+    if (picks != null) {
         picksListActual = picks;
         updatePicksPlotFromList(picksListActual);
-    });
-//    printt(treeMapPicks.keySet().toString());
+    } else {
+        // otherwise try to load from file
+        int current_fldr = section.getTraces().get(0).getHeader().fldr;
+        picks = PicksFileIO.loadPicksFromGather("/home/cadu/Documents/test1.csv", current_fldr, section);
+        if (!picks.isEmpty()) {
+            picksListActual = picks;
+            updatePicksPlotFromList(picksListActual);
+        }
+    }
 
     showView();
 }//GEN-LAST:event_btnPreviousActionPerformed
@@ -926,7 +946,7 @@ private void btnClipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
             printt("  Unable to save a single pick. Cancelling operation.");
             return;
         }
-        PicksFileIO.writePicksFromCurrentGather("/home/cadu/Documents/test1.csv", picksListActual, section);
+        PicksFileIO.savePicksFromCurrentGather("/home/cadu/Documents/test1.csv", picksListActual, section);
 
 //        PicksFileIO.writePicksToFile("/home/cadu/Documents/output.csv", picksListActual, section);
         // Save picks from current gather in memory
@@ -946,7 +966,9 @@ private void btnClipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
     private void btnLoadPicksActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLoadPicksActionPerformed
         printt("btnLoadPicksActionPerformed(evt)");
 
-        ArrayList<SVPoint2D> picks = PicksFileIO.readPicksFromFile("/home/cadu/Documents/output.csv", section);
+        int current_fldr = section.getTraces().get(0).getHeader().fldr;
+
+        ArrayList<SVPoint2D> picks = PicksFileIO.loadPicksFromGather("/home/cadu/Documents/test1.csv", current_fldr, section);
         picksListActual = picks;
         updatePicksPlotFromList(picks);
 
