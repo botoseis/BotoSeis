@@ -33,6 +33,7 @@ import java.util.Optional;
 import java.util.TreeMap;
 import java.util.Vector;
 import javax.swing.JFileChooser;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import usrdata.SUHeader;
@@ -410,6 +411,7 @@ public class MainWindow extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        jSeparator3 = new javax.swing.JSeparator();
         panelStatusbar = new javax.swing.JPanel();
         tfBar = new javax.swing.JTextField();
         jPanel3 = new javax.swing.JPanel();
@@ -426,10 +428,11 @@ public class MainWindow extends javax.swing.JFrame {
         btnHeader = new javax.swing.JToggleButton();
         btnGain = new javax.swing.JButton();
         btnClip = new javax.swing.JButton();
+        jSeparator2 = new javax.swing.JToolBar.Separator();
         buttonOpenPicksFile = new javax.swing.JButton();
+        buttonNewPicksFile = new javax.swing.JButton();
         toggleButtonPicks = new javax.swing.JToggleButton();
         btnSavePicks = new javax.swing.JButton();
-        btnLoadPicks = new javax.swing.JButton();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         menuExit = new javax.swing.JMenuItem();
@@ -441,6 +444,9 @@ public class MainWindow extends javax.swing.JFrame {
         menuViewImageContour = new javax.swing.JMenuItem();
         menuAuto = new javax.swing.JMenu();
         menuPicking = new javax.swing.JMenu();
+        menuItemOpenPickFile = new javax.swing.JMenuItem();
+        menuItemNewPickFile = new javax.swing.JMenuItem();
+        menuItemSavePicks = new javax.swing.JMenuItem();
         menuHelp = new javax.swing.JMenu();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -577,6 +583,7 @@ public class MainWindow extends javax.swing.JFrame {
             }
         });
         jToolBar1.add(btnClip);
+        jToolBar1.add(jSeparator2);
 
         buttonOpenPicksFile.setText("Open picks file...");
         buttonOpenPicksFile.setFocusable(false);
@@ -588,6 +595,17 @@ public class MainWindow extends javax.swing.JFrame {
             }
         });
         jToolBar1.add(buttonOpenPicksFile);
+
+        buttonNewPicksFile.setText("New picks file...");
+        buttonNewPicksFile.setFocusable(false);
+        buttonNewPicksFile.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        buttonNewPicksFile.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        buttonNewPicksFile.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonNewPicksFileActionPerformed(evt);
+            }
+        });
+        jToolBar1.add(buttonNewPicksFile);
 
         toggleButtonPicks.setText("Toggle Picking");
         toggleButtonPicks.setFocusable(false);
@@ -610,17 +628,6 @@ public class MainWindow extends javax.swing.JFrame {
             }
         });
         jToolBar1.add(btnSavePicks);
-
-        btnLoadPicks.setText("Load picks");
-        btnLoadPicks.setFocusable(false);
-        btnLoadPicks.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        btnLoadPicks.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        btnLoadPicks.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnLoadPicksActionPerformed(evt);
-            }
-        });
-        jToolBar1.add(btnLoadPicks);
 
         jMenu1.setText("File");
 
@@ -683,6 +690,31 @@ public class MainWindow extends javax.swing.JFrame {
         jMenuBar1.add(menuAuto);
 
         menuPicking.setText("Picking");
+
+        menuItemOpenPickFile.setText("Open picks file...");
+        menuItemOpenPickFile.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuItemOpenPickFileActionPerformed(evt);
+            }
+        });
+        menuPicking.add(menuItemOpenPickFile);
+
+        menuItemNewPickFile.setText("New picks file...");
+        menuItemNewPickFile.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuItemNewPickFileActionPerformed(evt);
+            }
+        });
+        menuPicking.add(menuItemNewPickFile);
+
+        menuItemSavePicks.setText("Save picks");
+        menuItemSavePicks.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuItemSavePicksActionPerformed(evt);
+            }
+        });
+        menuPicking.add(menuItemSavePicks);
+
         jMenuBar1.add(menuPicking);
 
         menuHelp.setText("Help");
@@ -701,7 +733,7 @@ public class MainWindow extends javax.swing.JFrame {
                         .addComponent(panelStatusbar, javax.swing.GroupLayout.DEFAULT_SIZE, 763, Short.MAX_VALUE))
                     .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
-                        .addComponent(jToolBar1, javax.swing.GroupLayout.PREFERRED_SIZE, 675, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jToolBar1, javax.swing.GroupLayout.PREFERRED_SIZE, 740, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(0, 0, Short.MAX_VALUE)))
                 .addGap(0, 0, 0))
         );
@@ -940,21 +972,46 @@ private void btnClipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
         PicksFileIO.savePicksFromCurrentGather(picksPath, picksListActual, section);
     }//GEN-LAST:event_btnSavePicksActionPerformed
 
-    private void btnLoadPicksActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLoadPicksActionPerformed
-        printt("btnLoadPicksActionPerformed(evt)");
+    private void buttonNewPicksFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonNewPicksFileActionPerformed
+        printt("buttonNewPicksFileActionPerformed(evt)");
 
-        if (picksPath == null) {
-            showWarning("no pick file was opened");
+        Path selectedPath = showFileCreationDialog(this);
+
+        if (selectedPath == null) {
             return;
         }
 
-        int current_fldr = section.getTraces().get(0).getHeader().fldr;
+        mapOfPickLists.clear();
+        clearPicks();
+        picksPath = selectedPath;
 
-        ArrayList<SVPoint2D> picks = PicksFileIO.loadPicksFromGather(picksPath, current_fldr, section);
-        picksListActual = picks;
-        updatePicksPlotFromList(picks);
+//        if (picksPath == null) {
+//            showWarning("no pick file was opened");
+//            return;
+//        }
+//
+//        int current_fldr = section.getTraces().get(0).getHeader().fldr;
+//
+//        ArrayList<SVPoint2D> picks = PicksFileIO.loadPicksFromGather(picksPath, current_fldr, section);
+//        picksListActual = picks;
+//        updatePicksPlotFromList(picks);
 
-    }//GEN-LAST:event_btnLoadPicksActionPerformed
+    }//GEN-LAST:event_buttonNewPicksFileActionPerformed
+
+    public static Path showFileCreationDialog(JFrame parent) {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Choose location to create new file");
+        fileChooser.setApproveButtonText("Create");
+        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+
+        int userSelection = fileChooser.showSaveDialog(parent);
+
+        if (userSelection == JFileChooser.APPROVE_OPTION) {
+            return fileChooser.getSelectedFile().toPath();
+        }
+
+        return null;
+    }
 
     public static void showWarning(String message) {
         JOptionPane.showMessageDialog(
@@ -977,10 +1034,50 @@ private void btnClipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
         // TODO add your handling code here:
         picksPath = chooseFile();
         if (picksPath != null) {
+            mapOfPickLists.clear();
             tryLoadPicksFromCurrentGather();
             toggleButtonPicks.setSelected(true);
         }
     }//GEN-LAST:event_buttonOpenPicksFileActionPerformed
+
+    private void menuItemOpenPickFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuItemOpenPickFileActionPerformed
+        // TODO add your handling code here:
+        picksPath = chooseFile();
+        if (picksPath != null) {
+            mapOfPickLists.clear();
+            tryLoadPicksFromCurrentGather();
+            toggleButtonPicks.setSelected(true);
+        }
+    }//GEN-LAST:event_menuItemOpenPickFileActionPerformed
+
+    private void menuItemNewPickFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuItemNewPickFileActionPerformed
+        printt("menuItemNewPickFileActionPerformed(evt)");
+
+        Path selectedPath = showFileCreationDialog(this);
+
+        if (selectedPath == null) {
+            return;
+        }
+
+        mapOfPickLists.clear();
+        clearPicks();
+        picksPath = selectedPath;
+    }//GEN-LAST:event_menuItemNewPickFileActionPerformed
+
+    private void menuItemSavePicksActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuItemSavePicksActionPerformed
+        printt("btnSavePicksActionPerformed(evt)");
+
+        if (picksPath == null) {
+            showWarning("no pick file was opened");
+            return;
+        }
+
+        if (picksListActual.size() < 2) {
+            printt("  Unable to save a single pick. Cancelling operation.");
+            return;
+        }
+        PicksFileIO.savePicksFromCurrentGather(picksPath, picksListActual, section);
+    }//GEN-LAST:event_menuItemSavePicksActionPerformed
 
     private static Path chooseFile() {
         JFileChooser fileChooser = new JFileChooser();
@@ -1366,21 +1463,26 @@ private void btnClipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
     private javax.swing.JButton btnClip;
     private javax.swing.JButton btnGain;
     private javax.swing.JToggleButton btnHeader;
-    private javax.swing.JButton btnLoadPicks;
     private javax.swing.JButton btnNext;
     private javax.swing.JButton btnPrevious;
     private javax.swing.JButton btnSavePicks;
     private javax.swing.JToggleButton btnZoom;
+    private javax.swing.JButton buttonNewPicksFile;
     private javax.swing.JButton buttonOpenPicksFile;
     private javax.swing.JPanel colorbarPanel;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JToolBar.Separator jSeparator1;
+    private javax.swing.JToolBar.Separator jSeparator2;
+    private javax.swing.JSeparator jSeparator3;
     private javax.swing.JToolBar jToolBar1;
     private javax.swing.JMenu menuAuto;
     private javax.swing.JMenuItem menuExit;
     private javax.swing.JMenu menuHelp;
+    private javax.swing.JMenuItem menuItemNewPickFile;
+    private javax.swing.JMenuItem menuItemOpenPickFile;
+    private javax.swing.JMenuItem menuItemSavePicks;
     private javax.swing.JMenu menuPicking;
     private javax.swing.JMenu menuView;
     private javax.swing.JMenuItem menuViewContour;
