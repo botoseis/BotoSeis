@@ -22,6 +22,8 @@ import java.awt.event.ItemEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.io.File;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -30,6 +32,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.TreeMap;
 import java.util.Vector;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import usrdata.SUHeader;
@@ -208,6 +211,10 @@ public class MainWindow extends javax.swing.JFrame {
                 SUHeader h = section.getTraces().get(trace).getHeader();
 //                printt(String.format("fldr: %d tracf: %d cdp: %d ep: %d offset: %d  time: %.2f", h.fldr, h.tracf, h.cdp, h.ep, h.offset, mouseLocation.fy));
 
+                if (!toggleButtonPicks.isSelected()) {
+                    return;
+                }
+
                 switch (event.getButton()) {
                     case java.awt.event.MouseEvent.BUTTON1:
                         addActualPick(mouseLocation);
@@ -254,6 +261,7 @@ public class MainWindow extends javax.swing.JFrame {
                     isPrevisualizingWithPreviewPick = false;
                     isMovingExistingPick = false;
                 }
+
                 switch (event.getButton()) {
                     case MouseEvent.BUTTON1:
                         printt("MOUSE: left button released");
@@ -264,11 +272,13 @@ public class MainWindow extends javax.swing.JFrame {
                         printt("MOUSE: right button released");
                         isRightMouseButtonPressed = false;
 
-                        // Picks eraser line
-                        isDrawingEraserLine = false;
-                        picksEraserLineGraphicalPlot.setVisible(false);
-                        removePicksAtRange(picksEraserLineStart.fx, mouseLocation.fx);
-                        break;
+                        if (toggleButtonPicks.isSelected()) {
+                            // Picks eraser line
+                            isDrawingEraserLine = false;
+                            picksEraserLineGraphicalPlot.setVisible(false);
+                            removePicksAtRange(picksEraserLineStart.fx, mouseLocation.fx);
+                            break;
+                        }
                 }
             }
 
@@ -287,6 +297,11 @@ public class MainWindow extends javax.swing.JFrame {
 
             @Override
             public void mouseDragged(MouseEvent event) {
+
+                if (!toggleButtonPicks.isSelected()) {
+                    return;
+                }
+
                 SVPoint2D mouseLocation = getGfxPanelCDP().getMouseLocation();
                 if (isLeftMouseButtonPressed) {
                     // Move existing pick
@@ -411,7 +426,8 @@ public class MainWindow extends javax.swing.JFrame {
         btnHeader = new javax.swing.JToggleButton();
         btnGain = new javax.swing.JButton();
         btnClip = new javax.swing.JButton();
-        btnTest = new javax.swing.JButton();
+        buttonOpenPicksFile = new javax.swing.JButton();
+        toggleButtonPicks = new javax.swing.JToggleButton();
         btnSavePicks = new javax.swing.JButton();
         btnLoadPicks = new javax.swing.JButton();
         jMenuBar1 = new javax.swing.JMenuBar();
@@ -474,9 +490,9 @@ public class MainWindow extends javax.swing.JFrame {
                     .addComponent(panelPkey, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(colorbarPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 687, Short.MAX_VALUE)
-                    .addComponent(panelCDP, javax.swing.GroupLayout.DEFAULT_SIZE, 687, Short.MAX_VALUE)
-                    .addComponent(panelB, javax.swing.GroupLayout.DEFAULT_SIZE, 687, Short.MAX_VALUE)))
+                    .addComponent(colorbarPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 699, Short.MAX_VALUE)
+                    .addComponent(panelCDP, javax.swing.GroupLayout.DEFAULT_SIZE, 699, Short.MAX_VALUE)
+                    .addComponent(panelB, javax.swing.GroupLayout.DEFAULT_SIZE, 699, Short.MAX_VALUE)))
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -562,16 +578,27 @@ public class MainWindow extends javax.swing.JFrame {
         });
         jToolBar1.add(btnClip);
 
-        btnTest.setText("TEST");
-        btnTest.setFocusable(false);
-        btnTest.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        btnTest.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        btnTest.addActionListener(new java.awt.event.ActionListener() {
+        buttonOpenPicksFile.setText("Open picks file...");
+        buttonOpenPicksFile.setFocusable(false);
+        buttonOpenPicksFile.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        buttonOpenPicksFile.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        buttonOpenPicksFile.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnTestActionPerformed(evt);
+                buttonOpenPicksFileActionPerformed(evt);
             }
         });
-        jToolBar1.add(btnTest);
+        jToolBar1.add(buttonOpenPicksFile);
+
+        toggleButtonPicks.setText("Toggle Picking");
+        toggleButtonPicks.setFocusable(false);
+        toggleButtonPicks.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        toggleButtonPicks.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        toggleButtonPicks.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                toggleButtonPicksActionPerformed(evt);
+            }
+        });
+        jToolBar1.add(toggleButtonPicks);
 
         btnSavePicks.setText("Save picks");
         btnSavePicks.setFocusable(false);
@@ -671,10 +698,12 @@ public class MainWindow extends javax.swing.JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
                         .addGap(22, 22, 22)
-                        .addComponent(panelStatusbar, javax.swing.GroupLayout.DEFAULT_SIZE, 757, Short.MAX_VALUE))
-                    .addComponent(jToolBar1, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, 572, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap())
+                        .addComponent(panelStatusbar, javax.swing.GroupLayout.DEFAULT_SIZE, 763, Short.MAX_VALUE))
+                    .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                        .addComponent(jToolBar1, javax.swing.GroupLayout.PREFERRED_SIZE, 675, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 0, Short.MAX_VALUE)))
+                .addGap(0, 0, 0))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -749,7 +778,7 @@ private void btnNextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
     // Save picks from current gather in file
     // --------------------------------------
     if (picksListActual.size() > 1) {
-        PicksFileIO.savePicksFromCurrentGather("/home/cadu/Documents/test1.csv", picksListActual, section);
+        PicksFileIO.savePicksFromCurrentGather(picksPath, picksListActual, section);
     }
 
     // TODO
@@ -774,20 +803,7 @@ private void btnNextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
     // ----------------------------------------
     // section now has changed to another gather
     // lets load picks from it if it exists
-    int newGatherKey = section.getTraces().get(0).getHeader().fldr;
-    // prefer to load from memory
-    ArrayList<SVPoint2D> picks = mapOfPickLists.get(newGatherKey);
-    if (picks != null) {
-        picksListActual = picks;
-        updatePicksPlotFromList(picksListActual);
-    } else {
-        // otherwise try to load from file
-        picks = PicksFileIO.loadPicksFromGather("/home/cadu/Documents/test1.csv", newGatherKey, section);
-        if (!picks.isEmpty()) {
-            picksListActual = picks;
-            updatePicksPlotFromList(picksListActual);
-        }
-    }
+    tryLoadPicksFromCurrentGather();
 
     showView();
 }//GEN-LAST:event_btnNextActionPerformed
@@ -806,7 +822,7 @@ private void btnPreviousActionPerformed(java.awt.event.ActionEvent evt) {//GEN-F
     // Save picks from current gather in file
     // --------------------------------------
     if (picksListActual.size() > 1) {
-        PicksFileIO.savePicksFromCurrentGather("/home/cadu/Documents/test1.csv", picksListActual, section);
+        PicksFileIO.savePicksFromCurrentGather(picksPath, picksListActual, section);
     }
 
     // TODO
@@ -824,24 +840,27 @@ private void btnPreviousActionPerformed(java.awt.event.ActionEvent evt) {//GEN-F
     // section now has changed to another gather
     // lets load picks from it if it exists
     clearPicks();
-    int newGatherKey = section.getTraces().get(0).getHeader().fldr;
-        // prefer to load from memory
-    ArrayList<SVPoint2D> picks = mapOfPickLists.get(newGatherKey);
-    if (picks != null) {
-        picksListActual = picks;
-        updatePicksPlotFromList(picksListActual);
-    } else {
-        // otherwise try to load from file
-        int current_fldr = section.getTraces().get(0).getHeader().fldr;
-        picks = PicksFileIO.loadPicksFromGather("/home/cadu/Documents/test1.csv", current_fldr, section);
-        if (!picks.isEmpty()) {
-            picksListActual = picks;
-            updatePicksPlotFromList(picksListActual);
-        }
-    }
+    tryLoadPicksFromCurrentGather();
 
     showView();
 }//GEN-LAST:event_btnPreviousActionPerformed
+
+    private void tryLoadPicksFromCurrentGather() {
+        int currentGatherKey = section.getTraces().get(0).getHeader().fldr;
+        // try to load from memory
+        ArrayList<SVPoint2D> picks = mapOfPickLists.get(currentGatherKey);
+        if (picks != null) {
+            picksListActual = picks;
+            updatePicksPlotFromList(picksListActual);
+        } else {
+            // otherwise try to load from file
+            picks = PicksFileIO.loadPicksFromGather(picksPath, currentGatherKey, section);
+            if (!picks.isEmpty()) {
+                picksListActual = picks;
+                updatePicksPlotFromList(picksListActual);
+            }
+        }
+    }
 
 private void btnHeaderItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_btnHeaderItemStateChanged
     if (evt.getStateChange() == ItemEvent.DESELECTED) {
@@ -906,73 +925,73 @@ private void btnClipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
     }
 }//GEN-LAST:event_btnClipActionPerformed
 
-    private void btnTestActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTestActionPerformed
-        // TODO add your handling code here:
-        printt("btnTest");
-
-//        PicksFileIO p = new PicksFileIO();
-//        p.writePicksToFile("/home/cadu/Documents/output.csv", picksListActual, section);
-//
-//        List<SVPoint2D> traceIntersectionPoints = PicksFileIO.computeTraceIntersectionPoints(picksListActual, section);
-//        
-//        printt("traceIntersectionPoints.size()" + traceIntersectionPoints.size());
-//        for (SVPoint2D intersection : traceIntersectionPoints) {
-//            printt(intersection.toString());
-//        }
-//        
-//        updatePicksPlotFromList(traceIntersectionPoints);
-//        gfxPanelCDP.removeAllActors();
-//        gfxPanelCDP.repaint();
-//        int numTraces = section.getN2();
-//        float firstTraceLocation = section.getF2();
-//        float spacingBetweenTraces = section.getD2();
-//        float[] tracesCoordinatesX = new float[numTraces];
-//        for (int i = 0; i < numTraces; i++) {
-    ////            SUHeader traceHeader = section.getTraces().get(i).getHeader();
-//            tracesCoordinatesX[i] = spacingBetweenTraces * i + firstTraceLocation;
-//            SVPoint2D pickLocation = new SVPoint2D();
-//            pickLocation.fx = tracesCoordinatesX[i];
-//            pickLocation.fy = 1.0f;
-//            addActualPick(pickLocation);
-//        }
-
-//        picksCurve.update(new float[] {1.0f, 1.5f}, new float[] {1.0f, 1.5f});
-
-    }//GEN-LAST:event_btnTestActionPerformed
-
     private void btnSavePicksActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSavePicksActionPerformed
         printt("btnSavePicksActionPerformed(evt)");
+
+        if (picksPath == null) {
+            showWarning("no pick file was opened");
+            return;
+        }
+
         if (picksListActual.size() < 2) {
             printt("  Unable to save a single pick. Cancelling operation.");
             return;
         }
-        PicksFileIO.savePicksFromCurrentGather("/home/cadu/Documents/test1.csv", picksListActual, section);
-
-//        PicksFileIO.writePicksToFile("/home/cadu/Documents/output.csv", picksListActual, section);
-        // Save picks from current gather in memory
-        // ----------------------------------------
-//        printt("  section.getTraces().get(0).getHeader().ep: " + section.getTraces().get(0).getHeader().ep);
-//        printt("  hashMapPicks.size(): " + mapOfPickLists.size());
-//        if (picksListActual.size() > 1) {
-//            int current_ep = section.getTraces().get(0).getHeader().ep;
-//            mapOfPickLists.put(current_ep, (ArrayList<SVPoint2D>) picksListActual.clone());
-//        }
-//        printt("  treeMapPicks.size(): " + mapOfPickLists.size());
-//        printt("  treeMapPicks.keySet(): " + mapOfPickLists.keySet().toString());
-//        PicksFileIO.writePicksFromAllGathersToFile("/home/cadu/Documents/output.csv", mapOfPickLists, section);
-
+        PicksFileIO.savePicksFromCurrentGather(picksPath, picksListActual, section);
     }//GEN-LAST:event_btnSavePicksActionPerformed
 
     private void btnLoadPicksActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLoadPicksActionPerformed
         printt("btnLoadPicksActionPerformed(evt)");
 
+        if (picksPath == null) {
+            showWarning("no pick file was opened");
+            return;
+        }
+
         int current_fldr = section.getTraces().get(0).getHeader().fldr;
 
-        ArrayList<SVPoint2D> picks = PicksFileIO.loadPicksFromGather("/home/cadu/Documents/test1.csv", current_fldr, section);
+        ArrayList<SVPoint2D> picks = PicksFileIO.loadPicksFromGather(picksPath, current_fldr, section);
         picksListActual = picks;
         updatePicksPlotFromList(picks);
 
     }//GEN-LAST:event_btnLoadPicksActionPerformed
+
+    public static void showWarning(String message) {
+        JOptionPane.showMessageDialog(
+                null,
+                message,
+                "Warning",
+                JOptionPane.WARNING_MESSAGE
+        );
+    }
+
+    private void toggleButtonPicksActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_toggleButtonPicksActionPerformed
+        // TODO add your handling code here:
+        if (picksPath == null) {
+            showWarning("no pick file was opened");
+            toggleButtonPicks.setSelected(false);
+        }
+    }//GEN-LAST:event_toggleButtonPicksActionPerformed
+
+    private void buttonOpenPicksFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonOpenPicksFileActionPerformed
+        // TODO add your handling code here:
+        picksPath = chooseFile();
+        if (picksPath != null) {
+            tryLoadPicksFromCurrentGather();
+            toggleButtonPicks.setSelected(true);
+        }
+    }//GEN-LAST:event_buttonOpenPicksFileActionPerformed
+
+    private static Path chooseFile() {
+        JFileChooser fileChooser = new JFileChooser();
+        int result = fileChooser.showOpenDialog(null);
+
+        if (result == JFileChooser.APPROVE_OPTION) {
+            return fileChooser.getSelectedFile().toPath();
+        } else {
+            return null; // No file selected or operation canceled
+        }
+    }
 
     private void onGraphicsPanelMouseReleased(MouseEvent e) {
         float lm[] = getGfxPanelCDP().getAxisLimits();
@@ -1351,8 +1370,8 @@ private void btnClipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
     private javax.swing.JButton btnNext;
     private javax.swing.JButton btnPrevious;
     private javax.swing.JButton btnSavePicks;
-    private javax.swing.JButton btnTest;
     private javax.swing.JToggleButton btnZoom;
+    private javax.swing.JButton buttonOpenPicksFile;
     private javax.swing.JPanel colorbarPanel;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenuBar jMenuBar1;
@@ -1375,6 +1394,7 @@ private void btnClipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
     private javax.swing.JPanel panelPkey;
     private javax.swing.JPanel panelStatusbar;
     private javax.swing.JTextField tfBar;
+    private javax.swing.JToggleButton toggleButtonPicks;
     // End of variables declaration//GEN-END:variables
     private gfx.SVGraphicsPanel gfxPanelCDP = new gfx.SVGraphicsPanel();
     GfxPanelColorbar m_gfxPanelColorbar;
@@ -1436,6 +1456,7 @@ private void btnClipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
     private boolean isPrevisualizingWithPreviewPick = false;
     private boolean isMovingExistingPick = false;
     private boolean isDrawingEraserLine = false;
+    private Path picksPath = null;
 
     /**
      * @return the mHeader

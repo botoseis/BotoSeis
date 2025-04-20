@@ -8,7 +8,9 @@ import de.siegmar.fastcsv.reader.CsvReader;
 import de.siegmar.fastcsv.reader.NamedCsvRecord;
 import de.siegmar.fastcsv.writer.CsvWriter;
 import gfx.SVPoint2D;
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.*;
@@ -343,29 +345,28 @@ public class PicksFileIO {
 
     private static final String CSV_HEADER = "tracl,tracr,fldr,tracf,ep,offset,time\n";
 
-    public static void savePicksFromCurrentGather(String filename, List<SVPoint2D> pickList, SUSection currentGather) {
-        if (!Files.exists(Paths.get(filename))) {
-            writeHeadersEmptyFile(filename);
+    public static void savePicksFromCurrentGather(Path path, List<SVPoint2D> pickList, SUSection currentGather) {
+        if (!Files.exists(path) || !isFileValid(path)) {
+            truncateAndWriteHeader(path);
         }
 
         String gatherKey = "fldr";
         String currentValueOfGatherKey = String.valueOf(currentGather.getTraces().get(0).getHeader().fldr);
 
-        filterInplaceNotEqualTo(filename, gatherKey, currentValueOfGatherKey);
+        filterInplaceNotEqualTo(path, gatherKey, currentValueOfGatherKey);
 
-        appendPicks(filename, pickList, currentGather);
+        appendPicks(path, pickList, currentGather);
     }
 
-    private static void writeHeadersEmptyFile(String filename) {
+    private static void truncateAndWriteHeader(Path path) {
         try {
-            Files.writeString(Paths.get(filename), CSV_HEADER, StandardOpenOption.CREATE);
+            Files.writeString(path, CSV_HEADER, StandardOpenOption.CREATE);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public static void filterInplaceNotEqualTo(String pathName, String targetColumn, String targetValue) {
-        Path path = Paths.get(pathName);
+    public static void filterInplaceNotEqualTo(Path path, String targetColumn, String targetValue) {
 
         List<String> header;
 
@@ -404,9 +405,9 @@ public class PicksFileIO {
         }
     }
 
-    public static void appendPicks(String filename, List<SVPoint2D> pickList, SUSection currentSection) {
+    public static void appendPicks(Path path, List<SVPoint2D> pickList, SUSection currentSection) {
         List<SVPoint2D> picksAtTraces = computeTraceIntersectionPoints(pickList, currentSection);
-        try (CsvWriter csvWriter = CsvWriter.builder().build(new BufferedWriter(new FileWriter(filename, true)))) {
+        try (CsvWriter csvWriter = CsvWriter.builder().build(new BufferedWriter(new FileWriter(path.toFile(), true)))) {
             for (SVPoint2D pick : picksAtTraces) {
                 int traceIndex = computeNearestTraceIndex(pick, currentSection);
                 SUHeader header = currentSection.getTraces().get(traceIndex).getHeader();
@@ -425,13 +426,31 @@ public class PicksFileIO {
         }
     }
 
-    public static ArrayList<SVPoint2D> loadPicksFromGather(String filename, int currentValueOfGatherKey, SUSection currentSection) {
-        return selectPicksCommonColumnValue(filename, "fldr", String.valueOf(currentValueOfGatherKey), currentSection);
+    public static ArrayList<SVPoint2D> loadPicksFromGather(Path path, int currentValueOfGatherKey, SUSection currentSection) {
+        if (!Files.exists(path) || !isFileValid(path)) {
+            truncateAndWriteHeader(path);
+        }
+        return selectPicksCommonColumnValue(path, "fldr", String.valueOf(currentValueOfGatherKey), currentSection);
     }
-    
-    private static ArrayList<SVPoint2D> selectPicksCommonColumnValue(String filename, String column, String value, SUSection currentSection) {
+
+    private static String readFirstLine(Path path) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(path.toFile()))) {
+            return reader.readLine();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static boolean isFileValid(Path path) {
+        String firstLine = readFirstLine(path);
+        if (firstLine == null) {
+            return false;
+        }
+        return firstLine.concat("\n").equals(CSV_HEADER);
+    }
+
+    private static ArrayList<SVPoint2D> selectPicksCommonColumnValue(Path path, String column, String value, SUSection currentSection) {
         ArrayList<SVPoint2D> pickList = new ArrayList<>();
-        Path path = Paths.get(filename);
         try (CsvReader<NamedCsvRecord> csvReader = CsvReader.builder().ofNamedCsvRecord(path)) {
             csvReader.stream()
                     .filter(record -> record.getField(column).equals(value))

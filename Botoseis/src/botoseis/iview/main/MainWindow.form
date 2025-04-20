@@ -115,12 +115,15 @@
               <Group type="103" groupAlignment="1" attributes="0">
                   <Group type="102" alignment="0" attributes="0">
                       <EmptySpace min="-2" pref="22" max="-2" attributes="0"/>
-                      <Component id="panelStatusbar" pref="757" max="32767" attributes="0"/>
+                      <Component id="panelStatusbar" pref="763" max="32767" attributes="0"/>
                   </Group>
-                  <Component id="jToolBar1" alignment="0" min="-2" pref="572" max="-2" attributes="0"/>
                   <Component id="jPanel3" alignment="1" max="32767" attributes="0"/>
+                  <Group type="102" alignment="0" attributes="0">
+                      <Component id="jToolBar1" min="-2" pref="675" max="-2" attributes="0"/>
+                      <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
+                  </Group>
               </Group>
-              <EmptySpace max="-2" attributes="0"/>
+              <EmptySpace min="-2" pref="0" max="-2" attributes="0"/>
           </Group>
       </Group>
     </DimensionLayout>
@@ -161,9 +164,9 @@
                   </Group>
                   <EmptySpace min="-2" max="-2" attributes="0"/>
                   <Group type="103" groupAlignment="0" attributes="0">
-                      <Component id="colorbarPanel" alignment="0" pref="687" max="32767" attributes="0"/>
-                      <Component id="panelCDP" pref="687" max="32767" attributes="0"/>
-                      <Component id="panelB" pref="687" max="32767" attributes="0"/>
+                      <Component id="colorbarPanel" alignment="0" pref="699" max="32767" attributes="0"/>
+                      <Component id="panelCDP" pref="699" max="32767" attributes="0"/>
+                      <Component id="panelB" pref="699" max="32767" attributes="0"/>
                   </Group>
               </Group>
           </Group>
@@ -345,15 +348,26 @@
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnClipActionPerformed"/>
           </Events>
         </Component>
-        <Component class="javax.swing.JButton" name="btnTest">
+        <Component class="javax.swing.JButton" name="buttonOpenPicksFile">
           <Properties>
-            <Property name="text" type="java.lang.String" value="TEST"/>
+            <Property name="text" type="java.lang.String" value="Open picks file..."/>
             <Property name="focusable" type="boolean" value="false"/>
             <Property name="horizontalTextPosition" type="int" value="0"/>
             <Property name="verticalTextPosition" type="int" value="3"/>
           </Properties>
           <Events>
-            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnTestActionPerformed"/>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="buttonOpenPicksFileActionPerformed"/>
+          </Events>
+        </Component>
+        <Component class="javax.swing.JToggleButton" name="toggleButtonPicks">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Toggle Picking"/>
+            <Property name="focusable" type="boolean" value="false"/>
+            <Property name="horizontalTextPosition" type="int" value="0"/>
+            <Property name="verticalTextPosition" type="int" value="3"/>
+          </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="toggleButtonPicksActionPerformed"/>
           </Events>
         </Component>
         <Component class="javax.swing.JButton" name="btnSavePicks">
