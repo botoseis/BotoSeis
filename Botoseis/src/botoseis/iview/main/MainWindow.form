@@ -2,8 +2,6 @@
 
 <Form version="1.3" maxVersion="1.6" type="org.netbeans.modules.form.forminfo.JFrameFormInfo">
   <NonVisualComponents>
-    <Component class="javax.swing.JSeparator" name="jSeparator3">
-    </Component>
     <Menu class="javax.swing.JMenuBar" name="jMenuBar1">
       <SubComponents>
         <Menu class="javax.swing.JMenu" name="jMenu1">
@@ -68,20 +66,22 @@
             </MenuItem>
           </SubComponents>
         </Menu>
-        <Menu class="javax.swing.JMenu" name="menuAuto">
-          <Properties>
-            <Property name="mnemonic" type="int" value="80"/>
-            <Property name="text" type="java.lang.String" value="Auto" noResource="true"/>
-          </Properties>
-        </Menu>
         <Menu class="javax.swing.JMenu" name="menuPicking">
           <Properties>
             <Property name="text" type="java.lang.String" value="Picking"/>
           </Properties>
           <SubComponents>
+            <MenuItem class="javax.swing.JMenuItem" name="menuItemSavePicks">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Save current picks"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="menuItemSavePicksActionPerformed"/>
+              </Events>
+            </MenuItem>
             <MenuItem class="javax.swing.JMenuItem" name="menuItemOpenPickFile">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Open picks file..."/>
+                <Property name="text" type="java.lang.String" value="FB open picks file..."/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="menuItemOpenPickFileActionPerformed"/>
@@ -89,19 +89,21 @@
             </MenuItem>
             <MenuItem class="javax.swing.JMenuItem" name="menuItemNewPickFile">
               <Properties>
-                <Property name="text" type="java.lang.String" value="New picks file..."/>
+                <Property name="text" type="java.lang.String" value="FB new picks file..."/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="menuItemNewPickFileActionPerformed"/>
               </Events>
             </MenuItem>
-            <MenuItem class="javax.swing.JMenuItem" name="menuItemSavePicks">
+            <MenuItem class="javax.swing.JMenuItem" name="jMenuItem1">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Save picks"/>
+                <Property name="text" type="java.lang.String" value="HZ open picks file.."/>
               </Properties>
-              <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="menuItemSavePicksActionPerformed"/>
-              </Events>
+            </MenuItem>
+            <MenuItem class="javax.swing.JMenuItem" name="jMenuItem2">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="HZ new picks file..."/>
+              </Properties>
             </MenuItem>
           </SubComponents>
         </Menu>
@@ -378,48 +380,15 @@
         </Component>
         <Component class="javax.swing.JToolBar$Separator" name="jSeparator2">
         </Component>
-        <Component class="javax.swing.JButton" name="buttonOpenPicksFile">
-          <Properties>
-            <Property name="text" type="java.lang.String" value="Open picks file..."/>
-            <Property name="focusable" type="boolean" value="false"/>
-            <Property name="horizontalTextPosition" type="int" value="0"/>
-            <Property name="verticalTextPosition" type="int" value="3"/>
-          </Properties>
-          <Events>
-            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="buttonOpenPicksFileActionPerformed"/>
-          </Events>
-        </Component>
-        <Component class="javax.swing.JButton" name="buttonNewPicksFile">
-          <Properties>
-            <Property name="text" type="java.lang.String" value="New picks file..."/>
-            <Property name="focusable" type="boolean" value="false"/>
-            <Property name="horizontalTextPosition" type="int" value="0"/>
-            <Property name="verticalTextPosition" type="int" value="3"/>
-          </Properties>
-          <Events>
-            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="buttonNewPicksFileActionPerformed"/>
-          </Events>
-        </Component>
         <Component class="javax.swing.JToggleButton" name="toggleButtonPicks">
           <Properties>
-            <Property name="text" type="java.lang.String" value="Toggle Picking"/>
+            <Property name="text" type="java.lang.String" value="Picking"/>
             <Property name="focusable" type="boolean" value="false"/>
             <Property name="horizontalTextPosition" type="int" value="0"/>
             <Property name="verticalTextPosition" type="int" value="3"/>
           </Properties>
           <Events>
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="toggleButtonPicksActionPerformed"/>
-          </Events>
-        </Component>
-        <Component class="javax.swing.JButton" name="btnSavePicks">
-          <Properties>
-            <Property name="text" type="java.lang.String" value="Save picks"/>
-            <Property name="focusable" type="boolean" value="false"/>
-            <Property name="horizontalTextPosition" type="int" value="0"/>
-            <Property name="verticalTextPosition" type="int" value="3"/>
-          </Properties>
-          <Events>
-            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnSavePicksActionPerformed"/>
           </Events>
         </Component>
       </SubComponents>
