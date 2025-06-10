@@ -350,8 +350,8 @@ public class PicksFileIO {
             truncateAndWriteHeader(path);
         }
 
-        String gatherKey = "fldr";
-        String currentValueOfGatherKey = String.valueOf(currentGather.getTraces().get(0).getHeader().fldr);
+        String gatherKey = "ep";
+        String currentValueOfGatherKey = String.valueOf(currentGather.getTraces().get(0).getHeader().ep);
 
         filterInplaceNotEqualTo(path, gatherKey, currentValueOfGatherKey);
 
@@ -430,7 +430,7 @@ public class PicksFileIO {
         if (!Files.exists(path) || !isFileValid(path)) {
             truncateAndWriteHeader(path);
         }
-        return selectPicksCommonColumnValue(path, "fldr", String.valueOf(currentValueOfGatherKey), currentSection);
+        return selectPicksCommonColumnValue(path, "ep", String.valueOf(currentValueOfGatherKey), currentSection);
     }
 
     private static String readFirstLine(Path path) {

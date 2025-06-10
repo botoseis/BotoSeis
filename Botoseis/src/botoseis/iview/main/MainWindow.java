@@ -851,20 +851,36 @@ private void btnPreviousActionPerformed(java.awt.event.ActionEvent evt) {//GEN-F
         printt("  [PICK] try load picks from gatherKey " + currentGatherKey);
 
         // first try to load from memory
+        printt("  [PICK] try load from memory");
         ArrayList<SVPoint2D> picks = mapOfPickLists.get(currentGatherKey);
         if (picks != null) {
-            printt("  [PICK] loaded from memory");
+            // load from memory sucessful
+            printt("  [PICK] success load from memory");
             picksListActual = picks;
             updatePicksPlotFromList(picksListActual);
-        } else if (picksPath != null) {
-            // otherwise try to load from file
-            picks = PicksFileIO.loadPicksFromGather(picksPath, currentGatherKey, section);
-            if (!picks.isEmpty()) {
-                printt("  [PICK] loaded from file");
-                picksListActual = picks;
-                updatePicksPlotFromList(picksListActual);
-            }
+            return;
         }
+        // load from memory not successful
+        printt("  [PICK] could not load from memory");
+
+        printt("  [PICK] try load from file");
+        if (picksPath == null) {
+            printt("  [PICK] could not load from file: no file is loaded");
+            return;
+        }
+        
+        // otherwise try to load from file
+        picks = PicksFileIO.loadPicksFromGather(picksPath, currentGatherKey, section);
+        
+
+        if (!picks.isEmpty()) {
+            printt("  [PICK] success load from file");
+            picksListActual = picks;
+            updatePicksPlotFromList(picksListActual);
+        } else {
+            printt("  [PICK] could not load from file: picks not found in file");
+        }
+        
     }
 
 private void btnHeaderItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_btnHeaderItemStateChanged
