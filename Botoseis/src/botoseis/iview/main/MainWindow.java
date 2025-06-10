@@ -766,12 +766,13 @@ private void btnNextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
 
     // Save picks from current gather in memory
     // ----------------------------------------
-    printt("  section.getTraces().get(0).getHeader().fldr: " + section.getTraces().get(0).getHeader().fldr);
-    printt("  treeMapPicks.size(): " + mapOfPickLists.size());
+    printt("  section.getTraces().get(0).getHeader().ep: " + section.getTraces().get(0).getHeader().ep);
+    printt("  mapOfPickLists.size(): " + mapOfPickLists.size());
+    printt("  picksListActual.size(): " + picksListActual.size());
     if (picksListActual.size() > 1) {
-        int currentGatherKey = section.getTraces().get(0).getHeader().fldr;
+        int currentGatherKey = section.getTraces().get(0).getHeader().ep;
         mapOfPickLists.put(currentGatherKey, (ArrayList<SVPoint2D>) picksListActual.clone());
-        printt("saved to memory ep " + currentGatherKey);
+        printt("  [PICK] saved to memory gatherKey " + currentGatherKey);
     }
     // Save picks from current gather in file
     // --------------------------------------
@@ -801,6 +802,7 @@ private void btnNextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
     // ----------------------------------------
     // section now has changed to another gather
     // lets load picks from it if it exists
+    clearPicks();
     tryLoadPicksFromCurrentGather();
 
     showView();
@@ -814,8 +816,9 @@ private void btnPreviousActionPerformed(java.awt.event.ActionEvent evt) {//GEN-F
     printt("  section.getTraces().get(0).getHeader().ep: " + section.getTraces().get(0).getHeader().ep);
     printt("  hashMapPicks.size(): " + mapOfPickLists.size());
     if (picksListActual.size() > 1) {
-        int current_ep = section.getTraces().get(0).getHeader().ep;
-        mapOfPickLists.put(current_ep, (ArrayList<SVPoint2D>) picksListActual.clone());
+        int currentGatherKey = section.getTraces().get(0).getHeader().ep;
+        mapOfPickLists.put(currentGatherKey, (ArrayList<SVPoint2D>) picksListActual.clone());
+        printt("  [PICK] saved to memory gatherKey " + currentGatherKey);
     }
     // Save picks from current gather in file
     // --------------------------------------
@@ -844,16 +847,20 @@ private void btnPreviousActionPerformed(java.awt.event.ActionEvent evt) {//GEN-F
 }//GEN-LAST:event_btnPreviousActionPerformed
 
     private void tryLoadPicksFromCurrentGather() {
-        int currentGatherKey = section.getTraces().get(0).getHeader().fldr;
-        // try to load from memory
+        int currentGatherKey = section.getTraces().get(0).getHeader().ep;
+        printt("  [PICK] try load picks from gatherKey " + currentGatherKey);
+
+        // first try to load from memory
         ArrayList<SVPoint2D> picks = mapOfPickLists.get(currentGatherKey);
         if (picks != null) {
+            printt("  [PICK] loaded from memory");
             picksListActual = picks;
             updatePicksPlotFromList(picksListActual);
-        } else {
+        } else if (picksPath != null) {
             // otherwise try to load from file
             picks = PicksFileIO.loadPicksFromGather(picksPath, currentGatherKey, section);
             if (!picks.isEmpty()) {
+                printt("  [PICK] loaded from file");
                 picksListActual = picks;
                 updatePicksPlotFromList(picksListActual);
             }
@@ -977,6 +984,7 @@ private void btnClipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
         mapOfPickLists.clear();
         clearPicks();
         picksPath = selectedPath;
+        PicksFileIO.truncateAndWriteHeader(picksPath);
     }//GEN-LAST:event_menuItemNewPickFileActionPerformed
 
     private void menuItemSavePicksActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuItemSavePicksActionPerformed
@@ -1547,6 +1555,8 @@ private void btnClipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST
 
     private void addActualPick(SVPoint2D mouseLocation) {
         printt("addActualPick(...)");
+        printt("  [before add]");
+        printt("  picksListActual.size(): " + picksListActual.size());        
         picksListActual.add(mouseLocation);
         picksListActual.sort(SVPoint2DComparator.getInstance());
         updatePicksPlotFromList(picksListActual);

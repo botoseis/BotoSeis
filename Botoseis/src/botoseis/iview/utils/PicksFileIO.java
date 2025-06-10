@@ -358,9 +358,9 @@ public class PicksFileIO {
         appendPicks(path, pickList, currentGather);
     }
 
-    private static void truncateAndWriteHeader(Path path) {
+    public static void truncateAndWriteHeader(Path path) {
         try {
-            Files.writeString(path, CSV_HEADER, StandardOpenOption.CREATE);
+            Files.writeString(path, CSV_HEADER);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
