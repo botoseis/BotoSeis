@@ -7,6 +7,7 @@ package botoseis.ivelan.temp;
 
 import botoseis.iview.dialogs.DialogGain;
 import botoseis.iview.dialogs.DialogHeaderTrace;
+import botoseis.mainGui.utils.Preferences;
 import gfx.SVActor;
 import gfx.AxisPanel;
 import gfx.GfxPanelColorbar;
@@ -216,6 +217,7 @@ public class DataView extends javax.swing.JFrame {
 
 
 
+        preferences = Preferences.getPreferences();
     }
 
     /**
@@ -606,7 +608,8 @@ private void menuSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
                 }
                 tr.getHeader().cdp = (int) icdp + i;
                 tr.setData(data3);
-                tr.writeToFile(fs, true);
+                boolean xdrFlag = !preferences.getFormat().equalsIgnoreCase("no-xdr");
+                tr.writeToFile(fs, xdrFlag);
             }
 
             fs.close();
@@ -1036,6 +1039,7 @@ private void menuSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
     float dtime;
     int ntime;
     float dt;
+    Preferences preferences;
 
     /**
      * @return the mHeader
