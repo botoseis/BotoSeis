@@ -60,6 +60,20 @@ public class PicksFileIO {
         }
     }
 
+    public static SVPoint2D computeIntersection_verticalLine_line(float xline, SVPoint2D p1, SVPoint2D p2) {
+//        if (line.size() < 2) {
+//            throw new IllegalArgumentException("List of line points must contain at least 2 points.");
+//        }
+
+        float slope = (p2.fy - p1.fy) / (p2.fx - p1.fx);
+        float intercept = p1.fy - slope * p1.fx;
+
+        SVPoint2D intersection = new SVPoint2D();
+        intersection.fx = xline;
+        intersection.fy = xline * slope + intercept;
+        return intersection;
+    }
+
     public static SVPoint2D findIntersection_traceXcoordinate_picksLineChart(float traceXcoordinate, List<SVPoint2D> picksCoordinates) {
 
         // if outside pick curve's range, exit already
@@ -135,30 +149,47 @@ public class PicksFileIO {
 
         // Extend left if not intercepting trace at leftmost pick
         // ------------------------------------------------------
-        if (Arrays.binarySearch(tracesXcoordinates, pickCoordinates.get(0).fx) < 0) {
-            SVPoint2D intersectionLeft = new SVPoint2D();
-            int indexL = Arrays.binarySearch(tracesXcoordinates, pickCoordinates.get(0).fx);
-            if (indexL >= 0) {
-                // if it is contained in the array, returned index of the search key
-                intersectionLeft.fx = tracesXcoordinates[indexL];
-            } else {
-                // otherwise, returned (-(insertion point) - 1)
-                //   The insertion point is defined as the point at which the key would be inserted
-                //   into the array: the index of the first element greater than the key
-                int insertionPoint = -indexL - 1;
-                intersectionLeft.fx = tracesXcoordinates[insertionPoint - 1];
-            }
-            intersectionLeft.fy = findIntersectionY_verticalLine_lineSegment(
-                    intersectionLeft.fx,
-                    pickCoordinates.get(0),
-                    pickCoordinates.get(1));
-            traceIntersectionPoints.add(intersectionLeft);
-        }
+//        if (Arrays.binarySearch(tracesXcoordinates, pickCoordinates.get(0).fx) < 0) {
+//            SVPoint2D intersectionLeft = new SVPoint2D();
+//            int indexL = Arrays.binarySearch(tracesXcoordinates, pickCoordinates.get(0).fx);
+//            if (indexL >= 0) {
+//                // if it is contained in the array, returned index of the search key
+//                intersectionLeft.fx = tracesXcoordinates[indexL];
+//            } else {
+//                // otherwise, returned (-(insertion point) - 1)
+//                //   The insertion point is defined as the point at which the key would be inserted
+//                //   into the array: the index of the first element greater than the key
+//                int insertionPoint = -indexL - 1;
+//                intersectionLeft.fx = tracesXcoordinates[insertionPoint - 1];
+//            }
+//            intersectionLeft.fy = findIntersectionY_verticalLine_lineSegment(
+//                    intersectionLeft.fx,
+//                    pickCoordinates.get(0),
+//                    pickCoordinates.get(1));
+//            traceIntersectionPoints.add(intersectionLeft);
+//        }
+        // Extend left and right
+        // ---------------------
+        SVPoint2D pickFirstTrace = computeIntersection_verticalLine_line(
+                tracesXcoordinates[0],
+                pickCoordinates.get(0),
+                pickCoordinates.get(1)
+        );
+        SVPoint2D pickLastTrace = computeIntersection_verticalLine_line(
+                tracesXcoordinates[tracesXcoordinates.length - 1],
+                pickCoordinates.get(pickCoordinates.size() - 2),
+                pickCoordinates.get(pickCoordinates.size() - 1)
+        );
+        List<SVPoint2D> picks = new ArrayList<>();
+        picks.add(pickFirstTrace);
+        picks.addAll(pickCoordinates);
+        picks.add(pickLastTrace);
 
         // Standard operation
         // ------------------
+        // for each trace coordinate
         for (int i = 0; i < tracesXcoordinates.length; i++) {
-            SVPoint2D intersection = findIntersection_traceXcoordinate_picksLineChart(tracesXcoordinates[i], pickCoordinates);
+            SVPoint2D intersection = findIntersection_traceXcoordinate_picksLineChart(tracesXcoordinates[i], picks);
             if (intersection != null) {
                 traceIntersectionPoints.add(intersection);
             }
@@ -166,22 +197,21 @@ public class PicksFileIO {
 
         // Extend right if not intercepting trace at rightmost pick
         // --------------------------------------------------------
-        if (Arrays.binarySearch(tracesXcoordinates, pickCoordinates.get(pickCoordinates.size() - 1).fx) < 0) {
-            SVPoint2D intersectionRight = new SVPoint2D();
-            int indexR = Arrays.binarySearch(tracesXcoordinates, pickCoordinates.get(pickCoordinates.size() - 1).fx);
-            if (indexR >= 0) {
-                intersectionRight.fx = tracesXcoordinates[indexR];
-            } else {
-                int insertionPoint = -indexR - 1;
-                intersectionRight.fx = tracesXcoordinates[insertionPoint];
-            }
-            intersectionRight.fy = findIntersectionY_verticalLine_lineSegment(
-                    intersectionRight.fx,
-                    pickCoordinates.get(pickCoordinates.size() - 2),
-                    pickCoordinates.get(pickCoordinates.size() - 1));
-            traceIntersectionPoints.add(intersectionRight);
-        }
-
+//        if (Arrays.binarySearch(tracesXcoordinates, pickCoordinates.get(pickCoordinates.size() - 1).fx) < 0) {
+//            SVPoint2D intersectionRight = new SVPoint2D();
+//            int indexR = Arrays.binarySearch(tracesXcoordinates, pickCoordinates.get(pickCoordinates.size() - 1).fx);
+//            if (indexR >= 0) {
+//                intersectionRight.fx = tracesXcoordinates[indexR];
+//            } else {
+//                int insertionPoint = -indexR - 1;
+//                intersectionRight.fx = tracesXcoordinates[insertionPoint];
+//            }
+//            intersectionRight.fy = findIntersectionY_verticalLine_lineSegment(
+//                    intersectionRight.fx,
+//                    pickCoordinates.get(pickCoordinates.size() - 2),
+//                    pickCoordinates.get(pickCoordinates.size() - 1));
+//            traceIntersectionPoints.add(intersectionRight);
+//        }
         return traceIntersectionPoints;
     }
 
